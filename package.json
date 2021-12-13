@@ -1,0 +1,27 @@
+{
+  "name": "js-eval-action",
+  "private": false,
+  "description": "GitHub action for evaluating JS expressions",
+  "repository": {
+    "url": "https://github.com/cardinalby/js-eval-action"
+  },
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "pack": "ncc build",
+    "all": "npm run build && npm run pack"
+  },
+  "author": "cardinalby",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/github": "^5.0.0",
+    "semver": "^7.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^12.20.37",
+    "@vercel/ncc": "^0.33.0",
+    "@types/semver": "^7.3.9",
+    "typescript": "^4.5.3"
+  }
+}

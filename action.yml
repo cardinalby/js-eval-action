@@ -1,0 +1,22 @@
+name: 'js-eval-action'
+description: 'GitHub action for evaluating JS expressions'
+author: 'cardinalby'
+inputs:
+  expression:
+    description: 'JS expression to evaluate'
+    required: true
+  extractOutputs:
+    required: false
+    default: 'false'
+    description: 'If true, separate outputs will be set from result object, JSON.stringify(result) otherwise'
+  timeoutMs:
+    required: false
+    description: 'If true, separate outputs will be set from result object, JSON.stringify(result) otherwise'
+outputs:
+  result:
+    description: 'Result of expression evaluation'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
+branding:
+  icon: 'code'
