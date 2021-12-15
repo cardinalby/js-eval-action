@@ -14,14 +14,14 @@ export const actionInputs = {
     },
 
     get extractOutputs(): boolean {
-        return ghActions.getBooleanInput(INPUT_EXTRACT_OUTPUTS)
+        return ghActions.getBooleanInput(INPUT_EXTRACT_OUTPUTS);
     },
 
     get timeout(): number|undefined {
         const timeout = ghActions.getInput(INPUT_TIMEOUT);
         if (timeout.length > 0) {
             const mSeconds = Number.parseInt(timeout);
-            if (Number.isNaN(mSeconds)) {
+            if (Number.isNaN(mSeconds) || mSeconds <= 0) {
                 throw new Error('Invalid timeout input value');
             }
             return mSeconds;

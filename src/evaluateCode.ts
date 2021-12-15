@@ -1,32 +1,45 @@
-import { Octokit } from '@octokit/core'
-import { ActionInputsObjectInterface } from './actionInputsObject';
-import { Context } from '@actions/github/lib/context';
 import vm from "vm";
 import { ActionOutputsInterface } from './actionOutputs';
-import ProcessEnv = NodeJS.ProcessEnv;
 
 export async function evaluateCode(
-    octokit: Octokit|undefined,
-    inputs: ActionInputsObjectInterface,
-    githubContext: Context,
-    env: ProcessEnv,
+    evalContext: object,
     expression: string,
     outputs: ActionOutputsInterface,
     extractOutputs: boolean,
-    timeoutMs: number|undefined
+    timeoutMs?: number|undefined
 ) {
-    const evalContext = {
-        inputs,
-        env,
-        octokit,
-        context: githubContext
+    // setTimeout is not available inside vm
+    const context = Object.assign({setTimeout: setTimeout}, evalContext);
+
+    let timeoutTimerPromise: Promise<any>|undefined;
+    let timeoutTimer: NodeJS.Timeout|undefined = undefined;
+    if (timeoutMs !== undefined) {
+        // Promise gets rejected on timeout of await outside the vm.runInNewContext()
+        timeoutTimerPromise = new Promise((resolve, reject) => {
+            timeoutTimer = setTimeout(
+                () => { reject(new Error('Result promise awaiting timed out')); },
+                timeoutMs
+            )
+        });
     }
-
-    const expressionWrapper = `'(async () => ${expression})()'`;
-    const result = await Promise.resolve(vm.runInNewContext(
-        expressionWrapper, evalContext, { timeout: timeoutMs }
-        ));
-
+    let result: any;
+    const expressionWrapper = `(async () => ${expression})()`;
+    let runResult: any;
+    try {
+        runResult = vm.runInNewContext(
+            expressionWrapper, context, {timeout: timeoutMs}
+        );
+    } catch(err) {
+        clearTimeout(timeoutTimer);
+        throw err;
+    }
+    if (runResult && typeof runResult.then === 'function' && timeoutTimerPromise) {
+        result = await Promise.race([runResult, timeoutTimerPromise]);
+        clearTimeout(timeoutTimer);
+    } else {
+        clearTimeout(timeoutTimer);
+        result = await Promise.resolve(runResult);
+    }
     if (extractOutputs && typeof result === 'object' && result !== null) {
         outputs.setOutputs(result);
     } else {
