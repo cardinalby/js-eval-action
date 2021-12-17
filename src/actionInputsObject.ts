@@ -1,10 +1,8 @@
-import {InputOptions} from "@actions/core";
-
 export interface ActionInputsObjectInterface {
-    [key: string]: string | undefined;
+    [key: string]: any;
 }
 
-export type GetInputFn = (name: string, options?: InputOptions) => string;
+export type GetInputFn = (name: string) => string;
 
 export class ActionInputsObject implements ActionInputsObjectInterface{
     constructor(getInputFn: GetInputFn) {
@@ -13,8 +11,7 @@ export class ActionInputsObject implements ActionInputsObjectInterface{
                 if (typeof prop !== 'string') {
                     throw new Error("Input name should be string")
                 }
-                const value = getInputFn(prop);
-                return value.length > 0 ? value : undefined
+                return getInputFn(prop);
             }
         });
     }

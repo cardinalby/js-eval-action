@@ -1,5 +1,5 @@
 import vm from "vm";
-import { ActionOutputsInterface } from './actionOutputs';
+import {ActionOutputsInterface} from './actionOutputs';
 
 export async function evaluateCode(
     evalContext: object,
@@ -40,7 +40,10 @@ export async function evaluateCode(
         clearTimeout(timeoutTimer);
         result = await Promise.resolve(runResult);
     }
-    if (extractOutputs && typeof result === 'object' && result !== null) {
+    if (extractOutputs) {
+        if (typeof result !== 'object' || result === null) {
+            throw new Error('"extractOutputs" input is true but expression result is not an object');
+        }
         outputs.setOutputs(result);
     } else {
         outputs.setResult(result);

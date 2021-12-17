@@ -43,13 +43,13 @@ describe('evaluateCode', () => {
     });
 
     it('should handle null', async () => {
-        await evaluateCode(
+        await expect(async () => await evaluateCode(
             {},
             'null',
             outputsFake,
             true
-        )
-        expect(outputsFake.result).toBeNull();
+        )).rejects.not.toBeUndefined();
+        expect(outputsFake.result).toBeUndefined();
         expect(outputsFake.outputsObj).toBeUndefined();
     });
 

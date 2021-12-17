@@ -98,7 +98,4 @@ Thumbs.db
 tests/__tests__/runner/*
 lib/**/*
 
-
-/.idea/git-get-release-action.iml
-/.idea/modules.xml
-/.idea/workspace.xml
+tests.env

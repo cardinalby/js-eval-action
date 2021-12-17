@@ -5,6 +5,9 @@ inputs:
   expression:
     description: 'JS expression to evaluate'
     required: true
+  jsonInputs:
+    description: 'Parse listed inputs as JSON (use "|" separator). * to parse all'
+    required: false
   extractOutputs:
     required: false
     default: 'false'

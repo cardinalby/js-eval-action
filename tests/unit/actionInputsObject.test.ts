@@ -21,6 +21,6 @@ describe('ActionInputsObject', () => {
 
         expect(actionInputsObject.input1).toBe('val1');
         expect(actionInputsObject.input2).toBe('val2');
-        expect(actionInputsObject.input3).toBeUndefined();
+        expect(actionInputsObject.input3).toBe('');
     })
 })

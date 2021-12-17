@@ -1,17 +1,16 @@
 import * as fs from "fs";
 import * as yaml from "yaml";
+import {wrapError} from "../../src/utils";
 
-function wrapError<T>(fn: () => T, messagePrefix: string): T {
-    try {
-        return fn();
-    } catch (err) {
-        throw new Error(messagePrefix + '. ' + err);
-    }
+export type ActionInputsObject = {
+    expression?: string;
+    jsonInputs?: string;
+    extractOutputs?: string,
+    timeoutMs?: string,
+    [key: string]: string|undefined
 }
 
-export function setInputs(
-    inputs: { [key: string]: string },
-) {
+export function setInputsEnv(inputs: ActionInputsObject) {
     const actionConfig = wrapError(
         () => yaml.parse(fs.readFileSync('action.yml').toString()),
         "Can't parse action.yml"
@@ -34,9 +33,22 @@ export function setInputs(
 
     Object.keys(inputs).forEach(
         inputName => {
-            setInput(inputName, inputs[inputName]);
+            const inputValue = inputs[inputName];
+            if (inputValue !== undefined) {
+                setInput(inputName, inputValue);
+            }
         }
     );
+}
+
+export function readCommands(stdout: string): {
+    outputs: ReturnType<typeof readOutputs>,
+    errors: ReturnType<typeof readErrors>
+} {
+    return {
+        outputs: readOutputs(stdout),
+        errors: readErrors(stdout)
+    }
 }
 
 export function readOutputs(stdout: string): { [key: string]: string } {
@@ -45,6 +57,16 @@ export function readOutputs(stdout: string): { [key: string]: string } {
     const result: { [key: string]: string } = {};
     while (match = re.exec(stdout)) {
         result[match[1]] = match[2];
+    }
+    return result;
+}
+
+export function readErrors(stdout: string): string[] {
+    const re = /^::error::(.*?)$/gm;
+    let match: RegExpExecArray | null;
+    const result: string[] = [];
+    while (match = re.exec(stdout)) {
+        result.push(match[1]);
     }
     return result;
 }
