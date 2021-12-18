@@ -1,13 +1,13 @@
 import Mock = jest.Mock;
-import {ActionInputsObject, ActionInputsObjectInterface, GetInputFn} from "../../src/actionInputsObject";
+import {ProxyObject, ActionInputsObjectInterface, GetInputFn} from "../../src/proxyObject";
 
-describe('ActionInputsObject', () => {
+describe('ProxyObject', () => {
     let getInputMock: GetInputFn & Mock;
     let actionInputsObject: ActionInputsObjectInterface;
 
     beforeEach(() => {
         getInputMock = jest.fn();
-        actionInputsObject = new ActionInputsObject(getInputMock)
+        actionInputsObject = new ProxyObject(getInputMock, 'input')
     });
 
     it('should return values', () => {

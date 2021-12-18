@@ -1,6 +1,6 @@
-import {InputsJsonEvaluator} from "../../src/inputsJsonEvaluator";
+import {KeyValueJsonStorage} from "../../src/keyValueJsonStorage";
 
-describe('InputsJsonEvaluator', () => {
+describe('KeyValueJsonStorage', () => {
     const getRawInput = (name: string) => {
         switch (name) {
             case 'i1':
@@ -20,7 +20,7 @@ describe('InputsJsonEvaluator', () => {
     };
 
     it('should pass raw value without regex', function () {
-        const evaluator = new InputsJsonEvaluator(getRawInput, []);
+        const evaluator = new KeyValueJsonStorage(getRawInput, []);
         expect(evaluator.getInput('i1')).toEqual('str');
         expect(evaluator.getInput('i2')).toEqual('42');
         expect(evaluator.getInput('i3')).toEqual('{"x": "val"}');
@@ -29,7 +29,7 @@ describe('InputsJsonEvaluator', () => {
     });
 
     it('should pass mixed values', function () {
-        const evaluator = new InputsJsonEvaluator(getRawInput, ['i3', 'i2']);
+        const evaluator = new KeyValueJsonStorage(getRawInput, ['i3', 'i2']);
         expect(evaluator.getInput('i1')).toEqual('str');
         expect(evaluator.getInput('i2')).toEqual(42);
         expect(evaluator.getInput('i3')).toEqual({x: "val"});
@@ -39,21 +39,21 @@ describe('InputsJsonEvaluator', () => {
         expect(evaluator.getInput('i7')).toEqual('');
     });
 
-    it('should handle true jsonInputs', function () {
-        const evaluator = new InputsJsonEvaluator(getRawInput, true);
+    it('should handle true jsonKeys', function () {
+        const evaluator = new KeyValueJsonStorage(getRawInput, true);
         expect(evaluator.getInput('i2')).toEqual(42);
         expect(evaluator.getInput('i3')).toEqual({x: "val"});
     });
 
     it('should not pollute prototype', function () {
-        const evaluator = new InputsJsonEvaluator(getRawInput, true);
+        const evaluator = new KeyValueJsonStorage(getRawInput, true);
         expect(evaluator.getInput('i6')).toEqual({['__proto__']: {"x": 5}});
         const emptyObj: any = {};
         expect(emptyObj.x).toBeUndefined();
     });
 
     it('should throw on invalid JSON', function () {
-        const evaluator = new InputsJsonEvaluator(getRawInput, true);
+        const evaluator = new KeyValueJsonStorage(getRawInput, true);
         expect(() => evaluator.getInput('i1')).toThrow('i1');
         expect(() => evaluator.getInput('i4')).toThrow('i4');
         expect(() => evaluator.getInput('i5')).toThrow('i5');

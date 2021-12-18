@@ -1,7 +1,7 @@
 import {readCommands, setInputsEnv} from "../utils/utils";
 import {run} from "../../src/runner";
+import './../utils/interceptStdout.d';
 import interceptStdout from 'intercept-stdout'
-import './../typeDefinitions/interceptStdout.d';
 import {performance} from "perf_hooks";
 import * as dotenv from 'dotenv';
 import ProcessEnv = NodeJS.ProcessEnv;
@@ -31,9 +31,9 @@ describe('js-eval-action', () => {
     it('simple math', async () => {
         setInputsEnv({
             expression: '3*(parseInt(inputs.x) + parseInt(inputs.y))',
-            x: '5',
-            y: '2'
+            x: '5'
         });
+        process.env.INPUT_Y = '2';
         await run();
         const commands = readCommands(stdout);
         expect(commands.outputs).toEqual({result: '21'});
@@ -51,6 +51,7 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.outputs).toEqual({o1: '2', o2: JSON.stringify({nested: 'bba'})});
         expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
     });
 
     it('extract outputs failure', async () => {
@@ -62,6 +63,7 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.errors.length).toEqual(1);
         expect(commands.outputs).toEqual({});
+        expect(process.exitCode).not.toEqual(0);
     });
 
     it('json inputs', async () => {
@@ -77,12 +79,28 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.outputs).toEqual({result: '18100'});
         expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('jsonInputs asterisk', async () => {
+        setInputsEnv({
+            expression: '3*(inputs.x.a + inputs.x.b) + inputs.z',
+            extractOutputs: 'false',
+            jsonInputs: '*',
+            x: '{"a": 4, "b": 2}',
+            z: '100'
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({result: '118'});
+        expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
     });
 
     it('json inputs failure', async () => {
         setInputsEnv({
             expression: 'inputs.x',
-            extractOutputs: 'true',
+            extractOutputs: 'false',
             jsonInputs: '*',
             x: '.',
         });
@@ -90,6 +108,7 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.errors.length).toBeGreaterThan(0);
         expect(commands.outputs).toEqual({});
+        expect(process.exitCode).not.toEqual(0);
     });
 
     it('expression failure', async () => {
@@ -100,6 +119,7 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.errors.length).toEqual(1);
         expect(commands.outputs).toEqual({});
+        expect(process.exitCode).not.toEqual(0);
     });
 
     it('resolved promise expression', async () => {
@@ -113,6 +133,7 @@ describe('js-eval-action', () => {
         expect(commands.outputs).toEqual({result: '22'});
         expect(commands.errors).toEqual([]);
         expect(endTime-startTime).toBeGreaterThanOrEqual(50);
+        expect([0, undefined]).toContain(process.exitCode);
     });
 
     it('rejected promise expression', async () => {
@@ -127,6 +148,7 @@ describe('js-eval-action', () => {
         expect(commands.errors[0].indexOf('xxyy')).not.toEqual(-1);
         expect(commands.outputs).toEqual({});
         expect(endTime-startTime).toBeGreaterThanOrEqual(50);
+        expect(process.exitCode).not.toEqual(0);
     });
 
     it('env variables', async () => {
@@ -138,6 +160,52 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.outputs).toEqual({result: '45353'});
         expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('json envs', async () => {
+        setInputsEnv({
+            expression: '3*(env.ex + env.ey) + env.ez',
+            extractOutputs: 'false',
+            jsonEnvs: 'ex | ey',
+        });
+        process.env.ex = '4';
+        process.env.ey = '2';
+        process.env.ez = '100';
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({result: '18100'});
+        expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('jsonEnvs asterisk', async () => {
+        setInputsEnv({
+            expression: '3*(env.x.a + env.x.b) + env.z',
+            extractOutputs: 'false',
+            jsonEnvs: '*',
+        });
+        process.env.x = '{"a": 4, "b": 2}';
+        process.env.z = '100';
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({result: '118'});
+        expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('json envs failure', async () => {
+        setInputsEnv({
+            expression: 'env.x',
+            extractOutputs: 'false',
+            jsonEnvs: '*',
+        });
+        process.env.x = '.';
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.errors.length).toBeGreaterThan(0);
+        expect(commands.outputs).toEqual({});
+        expect(process.exitCode).not.toEqual(0);
     });
 
     it('octokit request', async () => {
@@ -150,6 +218,7 @@ describe('js-eval-action', () => {
             const commands = readCommands(stdout);
             expect(commands.outputs).toEqual({result: 'js-eval-action'});
             expect(commands.errors).toEqual([]);
+            expect([0, undefined]).toContain(process.exitCode);
         }
     });
 
@@ -164,6 +233,7 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.outputs).toEqual({result: '-1'});
         expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
     });
 
     it('yaml, fs, await', async () => {
@@ -174,6 +244,20 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.outputs).toEqual({result: 'js-eval-action'});
         expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it("respect timeoutMs", async () => {
+        setInputsEnv({
+            expression: "new Promise(resolve => setTimeout(() => resolve(22), 1000))",
+            timeoutMs: '50'
+        });
+        const startTime = performance.now();
+        await run();
+        const endTime = performance.now();
+        expect(endTime-startTime).toBeLessThan(1000);
+        expect(endTime-startTime).toBeGreaterThanOrEqual(50);
+        expect(process.exitCode).not.toEqual(0);
     });
 
     it("timeout doesn't prevent to exit early", async () => {
@@ -185,5 +269,6 @@ describe('js-eval-action', () => {
         await run();
         const endTime = performance.now();
         expect(endTime-startTime).toBeLessThan(1000);
+        expect([0, undefined]).toContain(process.exitCode);
     });
 });

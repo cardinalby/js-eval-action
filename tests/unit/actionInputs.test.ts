@@ -1,7 +1,7 @@
 import {createReadRawInputsFnFake} from "./ReadRawInputsFnFake";
 import {ActionInputs} from "../../src/actionInputs";
 
-type InputName = 'expression'|'extractOutputs'|'jsonInputs'|'timeoutMs';
+type InputName = 'expression'|'extractOutputs'|'jsonInputs'|'jsonEnvs'|'timeoutMs';
 function getInputTester<R>(name: InputName): (value: string) => R {
     return (value: string): any => {
         const actionInputs = new ActionInputs(createReadRawInputsFnFake({[name]: value}));
@@ -32,6 +32,14 @@ describe('ActionInputs', () => {
 
     it('should read jsonInputs', () => {
         const tester = getInputTester<string[]|true>('jsonInputs');
+        expect(tester('')).toEqual([]);
+        expect(tester('ab | cd')).toEqual(['ab', 'cd']);
+        expect(tester('af')).toEqual(['af']);
+        expect(tester('*')).toEqual(true);
+    });
+
+    it('should read jsonEnvs', () => {
+        const tester = getInputTester<string[]|true>('jsonEnvs');
         expect(tester('')).toEqual([]);
         expect(tester('ab | cd')).toEqual(['ab', 'cd']);
         expect(tester('af')).toEqual(['af']);

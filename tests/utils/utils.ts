@@ -5,6 +5,7 @@ import {wrapError} from "../../src/utils";
 export type ActionInputsObject = {
     expression?: string;
     jsonInputs?: string;
+    jsonEnvs?: string;
     extractOutputs?: string,
     timeoutMs?: string,
     [key: string]: string|undefined

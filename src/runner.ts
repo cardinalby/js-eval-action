@@ -5,10 +5,10 @@ import * as wildstring from 'wildstring';
 import * as yaml from 'yaml';
 import * as fs from 'fs-extra';
 import {ActionOutputs, formatOutput} from './actionOutputs';
-import {ActionInputsObject} from './actionInputsObject';
+import {ProxyObject} from './proxyObject';
 import {ActionInputs} from './actionInputs';
 import {evaluateCode} from './evaluateCode';
-import {InputsJsonEvaluator} from "./inputsJsonEvaluator";
+import {KeyValueJsonStorage} from "./keyValueJsonStorage";
 
 export async function run(): Promise<void> {
     try {
@@ -20,16 +20,19 @@ export async function run(): Promise<void> {
 
 async function runImpl() {
     const actionInputs = new ActionInputs(ghActions.getInput);
-    const inputsJsonEvaluator = new InputsJsonEvaluator(
+    const inputsJsonEvaluator = new KeyValueJsonStorage(
         ghActions.getInput, actionInputs.jsonInputs
+    );
+    const envVarsJsonEvaluator = new KeyValueJsonStorage(
+        name => process.env[name] || '', actionInputs.jsonEnvs
     );
     const octokit = process.env.GITHUB_TOKEN
         ? getOctokit(process.env.GITHUB_TOKEN)
         : undefined;
 
     const evalContext = {
-        inputs: new ActionInputsObject(inputsJsonEvaluator.getInput.bind(inputsJsonEvaluator)),
-        env: process.env,
+        inputs: new ProxyObject(inputsJsonEvaluator.getInput.bind(inputsJsonEvaluator), 'input'),
+        env: new ProxyObject(inputsJsonEvaluator.getInput.bind(envVarsJsonEvaluator), 'env variable'),
         octokit,
         context,
         semver,

@@ -8,6 +8,9 @@ inputs:
   jsonInputs:
     description: 'Parse listed inputs as JSON (use "|" separator). * to parse all'
     required: false
+  jsonEnvs:
+    description: 'Parse listed envs as JSON (use "|" separator). * to parse all'
+    required: false
   extractOutputs:
     required: false
     default: 'false'
@@ -15,6 +18,9 @@ inputs:
   timeoutMs:
     required: false
     description: 'If true, separate outputs will be set from result object, JSON.stringify(result) otherwise'
+  data:
+    required: false
+    description: 'Arbitrary data you want to access in expression'
 outputs:
   result:
     description: 'Result of expression evaluation'

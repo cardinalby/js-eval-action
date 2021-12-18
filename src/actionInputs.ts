@@ -2,6 +2,7 @@ import {InputOptions} from "@actions/core";
 
 const INPUT_EXPRESSION = 'expression';
 const INPUT_JSON_INPUTS = 'jsonInputs';
+const INPUT_JSON_ENVS = 'jsonEnvs';
 const INPUT_EXTRACT_OUTPUTS = 'extractOutputs';
 const INPUT_TIMEOUT = 'timeoutMs';
 
@@ -32,17 +33,11 @@ export class ActionInputs implements ActionInputsInterface {
     }
 
     get jsonInputs(): string[]|true {
-        const value = this._readRawInput(INPUT_JSON_INPUTS);
-        if (value.length > 0) {
-            if (value === '*') {
-                return true;
-            }
-            return value
-                .split('|')
-                .filter(name => name.length > 0)
-                .map(name => name.trim());
-        }
-        return [];
+        return ActionInputs.getNamesList(this._readRawInput(INPUT_JSON_INPUTS));
+    }
+
+    get jsonEnvs(): string[]|true {
+        return ActionInputs.getNamesList(this._readRawInput(INPUT_JSON_ENVS));
     }
 
     get extractOutputs(): boolean {
@@ -59,6 +54,19 @@ export class ActionInputs implements ActionInputsInterface {
             return mSeconds;
         }
         return undefined;
+    }
+
+    private static getNamesList(value: string): string[]|true {
+        if (value.length > 0) {
+            if (value === '*') {
+                return true;
+            }
+            return value
+                .split('|')
+                .filter(name => name.length > 0)
+                .map(name => name.trim());
+        }
+        return [];
     }
 
     private getBooleanInput(name: string, options?: InputOptions): boolean {
