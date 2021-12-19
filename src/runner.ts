@@ -20,25 +20,26 @@ export async function run(): Promise<void> {
 
 async function runImpl() {
     const actionInputs = new ActionInputs(ghActions.getInput);
-    const inputsJsonEvaluator = new KeyValueJsonStorage(
-        ghActions.getInput, actionInputs.jsonInputs
+    const inputsKVJsonStorage = new KeyValueJsonStorage(
+        ghActions.getInput, actionInputs.jsonInputs, false
     );
-    const envVarsJsonEvaluator = new KeyValueJsonStorage(
-        name => process.env[name] || '', actionInputs.jsonEnvs
+    const envVarsKVJsonStorage = new KeyValueJsonStorage(
+        name => process.env[name] || '', actionInputs.jsonEnvs, true
     );
     const octokit = process.env.GITHUB_TOKEN
         ? getOctokit(process.env.GITHUB_TOKEN)
         : undefined;
 
     const evalContext = {
-        inputs: new ProxyObject(inputsJsonEvaluator.getInput.bind(inputsJsonEvaluator), 'input'),
-        env: new ProxyObject(inputsJsonEvaluator.getInput.bind(envVarsJsonEvaluator), 'env variable'),
+        inputs: new ProxyObject(inputsKVJsonStorage.getInput.bind(inputsKVJsonStorage), 'input'),
+        env: new ProxyObject(inputsKVJsonStorage.getInput.bind(envVarsKVJsonStorage), 'env variable'),
         octokit,
         context,
         semver,
         yaml,
         wildstring,
-        fs
+        fs,
+        core: ghActions
     };
 
     await evaluateCode(

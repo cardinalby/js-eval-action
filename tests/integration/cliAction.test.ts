@@ -10,8 +10,9 @@ describe('js-eval-action', () => {
     let stdout = '';
     let originalEnv: ProcessEnv;
 
-    interceptStdout(data => {
+    const unhookIntercept = interceptStdout(data => {
         stdout += data;
+        // comment this line to debug output
         return '';
     })
 
@@ -26,6 +27,11 @@ describe('js-eval-action', () => {
 
     afterEach(() => {
         process.env = {...originalEnv};
+        process.exitCode = 0;
+    })
+
+    afterAll(() => {
+        unhookIntercept();
     })
 
     it('simple math', async () => {
@@ -68,9 +74,9 @@ describe('js-eval-action', () => {
 
     it('json inputs', async () => {
         setInputsEnv({
-            expression: '3*(inputs.x + inputs.y) + inputs.z',
+            expression: '3*(inputs.x + inputs.Y) + inputs.z',
             extractOutputs: 'false',
-            jsonInputs: 'x | y',
+            jsonInputs: 'X | y',
             x: '4',
             y: '2',
             z: '100'
@@ -179,6 +185,21 @@ describe('js-eval-action', () => {
         expect([0, undefined]).toContain(process.exitCode);
     });
 
+    it('json envs are case sensitive', async () => {
+        setInputsEnv({
+            expression: 'env.ex + env.EX',
+            extractOutputs: 'false',
+            jsonEnvs: 'ex',
+        });
+        process.env.ex = '4';
+        process.env.EX = '200';
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({result: '4200'});
+        expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
     it('jsonEnvs asterisk', async () => {
         setInputsEnv({
             expression: '3*(env.x.a + env.x.b) + env.z',
@@ -249,7 +270,7 @@ describe('js-eval-action', () => {
 
     it("respect timeoutMs", async () => {
         setInputsEnv({
-            expression: "new Promise(resolve => setTimeout(() => resolve(22), 1000))",
+            expression: "new Promise(resolve => { setTimeout(() => resolve(22), 1000) })",
             timeoutMs: '50'
         });
         const startTime = performance.now();
@@ -269,6 +290,18 @@ describe('js-eval-action', () => {
         await run();
         const endTime = performance.now();
         expect(endTime-startTime).toBeLessThan(1000);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('github core access', async () => {
+        setInputsEnv({
+            expression: 'core.setSecret("adr32fer43434f", "dqwdqwdqwdq")',
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect(stdout.indexOf('::add-mask::adr32fer43434f')).not.toEqual(-1);
+        expect(commands.outputs).toEqual({result: 'undefined'});
+        expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
 });

@@ -1,4 +1,5 @@
 import {InputOptions} from "@actions/core";
+import {MatchKeyRule, MatchKeyRuleInterface} from "./matchKeyRule";
 
 const INPUT_EXPRESSION = 'expression';
 const INPUT_JSON_INPUTS = 'jsonInputs';
@@ -8,7 +9,8 @@ const INPUT_TIMEOUT = 'timeoutMs';
 
 export interface ActionInputsInterface {
     expression: string;
-    jsonInputs: string[]|true;
+    jsonInputs: MatchKeyRuleInterface;
+    jsonEnvs: MatchKeyRuleInterface;
     extractOutputs: boolean;
     timeoutMs: number|undefined
 }
@@ -32,12 +34,12 @@ export class ActionInputs implements ActionInputsInterface {
         return expression;
     }
 
-    get jsonInputs(): string[]|true {
-        return ActionInputs.getNamesList(this._readRawInput(INPUT_JSON_INPUTS));
+    get jsonInputs(): MatchKeyRule {
+        return ActionInputs.getNamesList(this._readRawInput(INPUT_JSON_INPUTS), false);
     }
 
-    get jsonEnvs(): string[]|true {
-        return ActionInputs.getNamesList(this._readRawInput(INPUT_JSON_ENVS));
+    get jsonEnvs(): MatchKeyRule {
+        return ActionInputs.getNamesList(this._readRawInput(INPUT_JSON_ENVS), true);
     }
 
     get extractOutputs(): boolean {
@@ -56,17 +58,20 @@ export class ActionInputs implements ActionInputsInterface {
         return undefined;
     }
 
-    private static getNamesList(value: string): string[]|true {
+    private static getNamesList(value: string, caseSensitive: boolean): MatchKeyRule {
         if (value.length > 0) {
-            if (value === '*') {
-                return true;
+            if (value.trim() === '*') {
+                return MatchKeyRule.matchAll();
             }
-            return value
-                .split('|')
-                .filter(name => name.length > 0)
-                .map(name => name.trim());
+            return MatchKeyRule.matchKeys(
+                value
+                    .split('|')
+                    .filter(name => name.length > 0)
+                    .map(name => name.trim()),
+                caseSensitive
+            );
         }
-        return [];
+        return MatchKeyRule.matchNone();
     }
 
     private getBooleanInput(name: string, options?: InputOptions): boolean {

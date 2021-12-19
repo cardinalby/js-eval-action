@@ -1,5 +1,13 @@
 import vm from "vm";
 import {ActionOutputsInterface} from './actionOutputs';
+import {TrackedTimers} from "./trackedTimers";
+
+function isPromise(value: any): value is Promise<any> {
+    return value &&
+        typeof value === 'object' &&
+        typeof value.then === 'function' &&
+        typeof value.catch === 'function';
+}
 
 export async function evaluateCode(
     evalContext: object,
@@ -8,8 +16,12 @@ export async function evaluateCode(
     extractOutputs: boolean,
     timeoutMs?: number|undefined
 ) {
-    // setTimeout is not available inside vm
-    const context = Object.assign({setTimeout: setTimeout}, evalContext);
+    const trackedTimers = new TrackedTimers();
+    // setTimeout and setInterval are not available inside vm
+    const context = Object.assign({
+        setTimeout: trackedTimers.setTimeout.bind(trackedTimers),
+        setInterval: trackedTimers.setInterval.bind(trackedTimers),
+    }, evalContext);
 
     let timeoutTimerPromise: Promise<any>|undefined;
     let timeoutTimer: NodeJS.Timeout|undefined = undefined;
@@ -29,17 +41,19 @@ export async function evaluateCode(
         runResult = vm.runInNewContext(
             expressionWrapper, context, {timeout: timeoutMs}
         );
+        if (isPromise(runResult) && timeoutTimerPromise) {
+            result = await Promise.race([runResult, timeoutTimerPromise]);
+        } else {
+            clearTimeout(timeoutTimer);
+            result = await Promise.resolve(runResult);
+        }
     } catch(err) {
-        clearTimeout(timeoutTimer);
         throw err;
-    }
-    if (runResult && typeof runResult.then === 'function' && timeoutTimerPromise) {
-        result = await Promise.race([runResult, timeoutTimerPromise]);
+    } finally {
         clearTimeout(timeoutTimer);
-    } else {
-        clearTimeout(timeoutTimer);
-        result = await Promise.resolve(runResult);
+        trackedTimers.clearAll();
     }
+
     if (extractOutputs) {
         if (typeof result !== 'object' || result === null) {
             throw new Error('"extractOutputs" input is true but expression result is not an object');
