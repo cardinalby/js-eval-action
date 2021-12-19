@@ -4,6 +4,7 @@ export interface ActionOutputsObjectInterface {
 
 export interface ActionOutputsInterface {
     setResult(value: any): void;
+    setTimedOut(value: boolean): void;
     setOutputs(outputs: ActionOutputsObjectInterface): void;
 }
 
@@ -21,6 +22,10 @@ export class ActionOutputs implements ActionOutputsInterface {
 
     setResult(value: any): void {
         this._setOutput('result', this._formatOutput(value))
+    }
+
+    setTimedOut(value: boolean): void {
+        this._setOutput('timedOut', value ? 'true' : 'false');
     }
 
     setOutputs(outputs: ActionOutputsObjectInterface): void {

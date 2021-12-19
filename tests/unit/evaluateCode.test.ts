@@ -1,4 +1,4 @@
-import {evaluateCode} from "../../src/evaluateCode";
+import {evaluateCode, TimedOutError} from "../../src/evaluateCode";
 import {ActionOutputsFake} from "./ActionOutputsFake";
 import {performance} from "perf_hooks";
 
@@ -93,7 +93,7 @@ describe('evaluateCode', () => {
 
     it('should fail on sync timeout', async () => {
         const startTime = performance.now();
-        await expect(async () => {
+        await expect(async () =>
             await evaluateCode(
                 {},
                 '{ let x = 0; for (let i = 0; i < 100000000; i++) { x += i*i; }; return x; }',
@@ -101,11 +101,12 @@ describe('evaluateCode', () => {
                 false,
                 100
             )
-        }).rejects.toThrow('timed out');
+        ).rejects.toThrow(TimedOutError);
         const endTime = performance.now();
         expect(endTime-startTime).toBeLessThan(200);
         expect(endTime-startTime).toBeGreaterThan(100);
         expect(outputsFake.result).toBeUndefined();
+        expect(outputsFake.timedOut).toEqual(true);
         expect(outputsFake.outputsObj).toBeUndefined();
     });
 
@@ -119,11 +120,12 @@ describe('evaluateCode', () => {
                 false,
                 100
             );
-        }).rejects.toThrow('timed out');
+        }).rejects.toThrow(TimedOutError);
         const endTime = performance.now();
         expect(endTime-startTime).toBeLessThan(200);
         expect(endTime-startTime).toBeGreaterThan(100);
         expect(outputsFake.result).toBeUndefined();
+        expect(outputsFake.timedOut).toEqual(true);
         expect(outputsFake.outputsObj).toBeUndefined();
     });
 });

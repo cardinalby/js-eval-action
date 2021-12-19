@@ -42,7 +42,7 @@ describe('js-eval-action', () => {
         process.env.INPUT_Y = '2';
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: '21'});
+        expect(commands.outputs).toEqual({result: '21', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
     });
 
@@ -55,7 +55,7 @@ describe('js-eval-action', () => {
         });
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({o1: '2', o2: JSON.stringify({nested: 'bba'})});
+        expect(commands.outputs).toEqual({o1: '2', o2: JSON.stringify({nested: 'bba'}), timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -68,7 +68,7 @@ describe('js-eval-action', () => {
         await run();
         const commands = readCommands(stdout);
         expect(commands.errors.length).toEqual(1);
-        expect(commands.outputs).toEqual({});
+        expect(commands.outputs).toEqual({ timedOut: 'false' });
         expect(process.exitCode).not.toEqual(0);
     });
 
@@ -83,7 +83,7 @@ describe('js-eval-action', () => {
         });
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: '18100'});
+        expect(commands.outputs).toEqual({result: '18100', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -98,7 +98,7 @@ describe('js-eval-action', () => {
         });
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: '118'});
+        expect(commands.outputs).toEqual({result: '118', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -113,7 +113,7 @@ describe('js-eval-action', () => {
         await run();
         const commands = readCommands(stdout);
         expect(commands.errors.length).toBeGreaterThan(0);
-        expect(commands.outputs).toEqual({});
+        expect(commands.outputs).toEqual({ timedOut: 'false' });
         expect(process.exitCode).not.toEqual(0);
     });
 
@@ -124,7 +124,7 @@ describe('js-eval-action', () => {
         await run();
         const commands = readCommands(stdout);
         expect(commands.errors.length).toEqual(1);
-        expect(commands.outputs).toEqual({});
+        expect(commands.outputs).toEqual({ timedOut: 'false'});
         expect(process.exitCode).not.toEqual(0);
     });
 
@@ -136,7 +136,7 @@ describe('js-eval-action', () => {
         await run();
         const endTime = performance.now();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: '22'});
+        expect(commands.outputs).toEqual({result: '22', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect(endTime-startTime).toBeGreaterThanOrEqual(50);
         expect([0, undefined]).toContain(process.exitCode);
@@ -152,7 +152,7 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.errors.length).toEqual(1);
         expect(commands.errors[0].indexOf('xxyy')).not.toEqual(-1);
-        expect(commands.outputs).toEqual({});
+        expect(commands.outputs).toEqual({ timedOut: 'false'});
         expect(endTime-startTime).toBeGreaterThanOrEqual(50);
         expect(process.exitCode).not.toEqual(0);
     });
@@ -164,7 +164,7 @@ describe('js-eval-action', () => {
         });
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: '45353'});
+        expect(commands.outputs).toEqual({result: '45353', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -180,7 +180,7 @@ describe('js-eval-action', () => {
         process.env.ez = '100';
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: '18100'});
+        expect(commands.outputs).toEqual({result: '18100', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -195,7 +195,7 @@ describe('js-eval-action', () => {
         process.env.EX = '200';
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: '4200'});
+        expect(commands.outputs).toEqual({result: '4200', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -210,7 +210,7 @@ describe('js-eval-action', () => {
         process.env.z = '100';
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: '118'});
+        expect(commands.outputs).toEqual({result: '118', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -225,7 +225,7 @@ describe('js-eval-action', () => {
         await run();
         const commands = readCommands(stdout);
         expect(commands.errors.length).toBeGreaterThan(0);
-        expect(commands.outputs).toEqual({});
+        expect(commands.outputs).toEqual({timedOut: 'false'});
         expect(process.exitCode).not.toEqual(0);
     });
 
@@ -237,7 +237,7 @@ describe('js-eval-action', () => {
             });
             await run();
             const commands = readCommands(stdout);
-            expect(commands.outputs).toEqual({result: 'js-eval-action'});
+            expect(commands.outputs).toEqual({result: 'js-eval-action', timedOut: 'false'});
             expect(commands.errors).toEqual([]);
             expect([0, undefined]).toContain(process.exitCode);
         }
@@ -252,7 +252,7 @@ describe('js-eval-action', () => {
         });
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: '-1'});
+        expect(commands.outputs).toEqual({result: '-1', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -263,7 +263,7 @@ describe('js-eval-action', () => {
         });
         await run();
         const commands = readCommands(stdout);
-        expect(commands.outputs).toEqual({result: 'js-eval-action'});
+        expect(commands.outputs).toEqual({result: 'js-eval-action', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -276,6 +276,8 @@ describe('js-eval-action', () => {
         const startTime = performance.now();
         await run();
         const endTime = performance.now();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({ timedOut: 'true' });
         expect(endTime-startTime).toBeLessThan(1000);
         expect(endTime-startTime).toBeGreaterThanOrEqual(50);
         expect(process.exitCode).not.toEqual(0);
@@ -289,6 +291,8 @@ describe('js-eval-action', () => {
         const startTime = performance.now();
         await run();
         const endTime = performance.now();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({ result: '2', timedOut: 'false' });
         expect(endTime-startTime).toBeLessThan(1000);
         expect([0, undefined]).toContain(process.exitCode);
     });
@@ -300,7 +304,7 @@ describe('js-eval-action', () => {
         await run();
         const commands = readCommands(stdout);
         expect(stdout.indexOf('::add-mask::adr32fer43434f')).not.toEqual(-1);
-        expect(commands.outputs).toEqual({result: 'undefined'});
+        expect(commands.outputs).toEqual({result: 'undefined', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
     });

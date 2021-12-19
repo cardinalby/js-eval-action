@@ -24,6 +24,8 @@ inputs:
 outputs:
   result:
     description: 'Result of expression evaluation'
+  timedOut:
+    description: '"true" if expression evaluation failed due to timeout. "false" otherwise'
 runs:
   using: 'node12'
   main: 'dist/index.js'

@@ -1,13 +1,9 @@
 import vm from "vm";
 import {ActionOutputsInterface} from './actionOutputs';
 import {TrackedTimers} from "./trackedTimers";
+import {isPromise} from "./utils";
 
-function isPromise(value: any): value is Promise<any> {
-    return value &&
-        typeof value === 'object' &&
-        typeof value.then === 'function' &&
-        typeof value.catch === 'function';
-}
+export class TimedOutError extends Error {}
 
 export async function evaluateCode(
     evalContext: object,
@@ -29,7 +25,7 @@ export async function evaluateCode(
         // Promise gets rejected on timeout of await outside the vm.runInNewContext()
         timeoutTimerPromise = new Promise((resolve, reject) => {
             timeoutTimer = setTimeout(
-                () => { reject(new Error('Result promise awaiting timed out')); },
+                () => { reject(new TimedOutError('Result promise awaiting timed out')); },
                 timeoutMs
             )
         });
@@ -47,8 +43,13 @@ export async function evaluateCode(
             clearTimeout(timeoutTimer);
             result = await Promise.resolve(runResult);
         }
+        outputs.setTimedOut(false);
     } catch(err) {
-        throw err;
+        const resultErr = (err && (err as any).code === 'ERR_SCRIPT_EXECUTION_TIMEOUT')
+            ? new TimedOutError('Script timed out')
+            : err;
+        outputs.setTimedOut(resultErr instanceof TimedOutError);
+        throw resultErr;
     } finally {
         clearTimeout(timeoutTimer);
         trackedTimers.clearAll();
