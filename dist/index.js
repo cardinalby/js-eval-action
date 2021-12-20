@@ -2,14 +2,16 @@
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 8366:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActionInputs = void 0;
+const matchKeyRule_1 = __nccwpck_require__(7259);
 const INPUT_EXPRESSION = 'expression';
 const INPUT_JSON_INPUTS = 'jsonInputs';
+const INPUT_JSON_ENVS = 'jsonEnvs';
 const INPUT_EXTRACT_OUTPUTS = 'extractOutputs';
 const INPUT_TIMEOUT = 'timeoutMs';
 class ActionInputs {
@@ -24,17 +26,10 @@ class ActionInputs {
         return expression;
     }
     get jsonInputs() {
-        const value = this._readRawInput(INPUT_JSON_INPUTS);
-        if (value.length > 0) {
-            if (value === '*') {
-                return true;
-            }
-            return value
-                .split('|')
-                .filter(name => name.length > 0)
-                .map(name => name.trim());
-        }
-        return [];
+        return ActionInputs.getNamesList(this._readRawInput(INPUT_JSON_INPUTS), false);
+    }
+    get jsonEnvs() {
+        return ActionInputs.getNamesList(this._readRawInput(INPUT_JSON_ENVS), true);
     }
     get extractOutputs() {
         return this.getBooleanInput(INPUT_EXTRACT_OUTPUTS);
@@ -49,6 +44,18 @@ class ActionInputs {
             return mSeconds;
         }
         return undefined;
+    }
+    static getNamesList(value, caseSensitive) {
+        if (value.length > 0) {
+            if (value.trim() === '*') {
+                return matchKeyRule_1.MatchKeyRule.matchAll();
+            }
+            return matchKeyRule_1.MatchKeyRule.matchKeys(value
+                .split('|')
+                .filter(name => name.length > 0)
+                .map(name => name.trim()), caseSensitive);
+        }
+        return matchKeyRule_1.MatchKeyRule.matchNone();
     }
     getBooleanInput(name, options) {
         const trueValue = ['true', 'True', 'TRUE'];
@@ -67,30 +74,6 @@ exports.ActionInputs = ActionInputs;
 
 /***/ }),
 
-/***/ 434:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ActionInputsObject = void 0;
-class ActionInputsObject {
-    constructor(getInputFn) {
-        return new Proxy(this, {
-            get(target, prop) {
-                if (typeof prop !== 'string') {
-                    throw new Error("Input name should be string");
-                }
-                return getInputFn(prop);
-            }
-        });
-    }
-}
-exports.ActionInputsObject = ActionInputsObject;
-//# sourceMappingURL=actionInputsObject.js.map
-
-/***/ }),
-
 /***/ 4633:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -105,6 +88,9 @@ class ActionOutputs {
     }
     setResult(value) {
         this._setOutput('result', this._formatOutput(value));
+    }
+    setTimedOut(value) {
+        this._setOutput('timedOut', value ? 'true' : 'false');
     }
     setOutputs(outputs) {
         for (let name of Object.keys(outputs)) {
@@ -157,18 +143,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.evaluateCode = void 0;
+exports.evaluateCode = exports.TimedOutError = void 0;
 const vm_1 = __importDefault(__nccwpck_require__(6144));
+const trackedTimers_1 = __nccwpck_require__(1575);
+const utils_1 = __nccwpck_require__(918);
+class TimedOutError extends Error {
+}
+exports.TimedOutError = TimedOutError;
 function evaluateCode(evalContext, expression, outputs, extractOutputs, timeoutMs) {
     return __awaiter(this, void 0, void 0, function* () {
-        // setTimeout is not available inside vm
-        const context = Object.assign({ setTimeout: setTimeout }, evalContext);
+        const trackedTimers = new trackedTimers_1.TrackedTimers();
+        // setTimeout and setInterval are not available inside vm
+        const context = Object.assign({
+            setTimeout: trackedTimers.setTimeout.bind(trackedTimers),
+            setInterval: trackedTimers.setInterval.bind(trackedTimers),
+        }, evalContext);
         let timeoutTimerPromise;
         let timeoutTimer = undefined;
         if (timeoutMs !== undefined) {
             // Promise gets rejected on timeout of await outside the vm.runInNewContext()
             timeoutTimerPromise = new Promise((resolve, reject) => {
-                timeoutTimer = setTimeout(() => { reject(new Error('Result promise awaiting timed out')); }, timeoutMs);
+                timeoutTimer = setTimeout(() => { reject(new TimedOutError('Result promise awaiting timed out')); }, timeoutMs);
             });
         }
         let result;
@@ -176,18 +171,25 @@ function evaluateCode(evalContext, expression, outputs, extractOutputs, timeoutM
         let runResult;
         try {
             runResult = vm_1.default.runInNewContext(expressionWrapper, context, { timeout: timeoutMs });
+            if ((0, utils_1.isPromise)(runResult) && timeoutTimerPromise) {
+                result = yield Promise.race([runResult, timeoutTimerPromise]);
+            }
+            else {
+                clearTimeout(timeoutTimer);
+                result = yield Promise.resolve(runResult);
+            }
+            outputs.setTimedOut(false);
         }
         catch (err) {
-            clearTimeout(timeoutTimer);
-            throw err;
+            const resultErr = (err && err.code === 'ERR_SCRIPT_EXECUTION_TIMEOUT')
+                ? new TimedOutError('Script timed out')
+                : err;
+            outputs.setTimedOut(resultErr instanceof TimedOutError);
+            throw resultErr;
         }
-        if (runResult && typeof runResult.then === 'function' && timeoutTimerPromise) {
-            result = yield Promise.race([runResult, timeoutTimerPromise]);
+        finally {
             clearTimeout(timeoutTimer);
-        }
-        else {
-            clearTimeout(timeoutTimer);
-            result = yield Promise.resolve(runResult);
+            trackedTimers.clearAll();
         }
         if (extractOutputs) {
             if (typeof result !== 'object' || result === null) {
@@ -205,39 +207,103 @@ exports.evaluateCode = evaluateCode;
 
 /***/ }),
 
-/***/ 5752:
+/***/ 6402:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InputsJsonEvaluator = void 0;
+exports.KeyValueJsonStorage = void 0;
 const utils_1 = __nccwpck_require__(918);
-class InputsJsonEvaluator {
-    /**
-     * @param getRawInput
-     * @param jsonInputs array of input names to be considered as containing JSON. `true` means "all"
-     */
-    constructor(getRawInput, jsonInputs) {
+class KeyValueJsonStorage {
+    constructor(getRawValue, jsonKeysRule, caseSensitiveKeys) {
         this._evaluatedCache = new Map();
-        this._getRawInput = getRawInput;
-        this._jsonInputs = jsonInputs;
+        this._getRawValue = getRawValue;
+        this._jsonKeysRule = jsonKeysRule;
+        this._caseSensitiveKeys = caseSensitiveKeys;
     }
     getInput(name) {
-        const rawValue = this._getRawInput(name);
-        if (this._jsonInputs === true ||
-            (Array.isArray(this._jsonInputs) && this._jsonInputs.includes(name))) {
-            if (!this._evaluatedCache.has(name)) {
-                const parsed = (0, utils_1.wrapError)(() => JSON.parse(rawValue), `Can't parse "${name}" input as JSON`);
-                this._evaluatedCache.set(name, parsed);
-            }
-            return this._evaluatedCache.get(name);
+        const rawValue = this._getRawValue(name);
+        const effectiveName = this._caseSensitiveKeys ? name : name.toUpperCase();
+        if (this._evaluatedCache.has(effectiveName)) {
+            return this._evaluatedCache.get(effectiveName);
+        }
+        if (this._jsonKeysRule.matches(name)) {
+            const parsed = (0, utils_1.wrapError)(() => JSON.parse(rawValue), `Can't parse "${name}" value as JSON`);
+            this._evaluatedCache.set(effectiveName, parsed);
+            return parsed;
         }
         return rawValue;
     }
 }
-exports.InputsJsonEvaluator = InputsJsonEvaluator;
-//# sourceMappingURL=inputsJsonEvaluator.js.map
+exports.KeyValueJsonStorage = KeyValueJsonStorage;
+//# sourceMappingURL=keyValueJsonStorage.js.map
+
+/***/ }),
+
+/***/ 7259:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MatchKeyRule = void 0;
+class MatchKeyRule {
+    constructor(keys, caseSensitive) {
+        this._keys = keys;
+        this._caseSensitive = caseSensitive;
+    }
+    static matchAll() {
+        return new MatchKeyRule(true, false);
+    }
+    static matchKeys(keys, caseSensitive) {
+        return new MatchKeyRule(new Set(caseSensitive
+            ? keys
+            : keys.map(k => k.toUpperCase())), caseSensitive);
+    }
+    static matchNone() {
+        return new MatchKeyRule(false, false);
+    }
+    matches(key) {
+        if (typeof this._keys === 'boolean') {
+            return this._keys;
+        }
+        return this._keys.has(this._caseSensitive
+            ? key
+            : key.toUpperCase());
+    }
+}
+exports.MatchKeyRule = MatchKeyRule;
+//# sourceMappingURL=matchKeyRule.js.map
+
+/***/ }),
+
+/***/ 5524:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ProxyObject = void 0;
+class ProxyObject {
+    constructor(getInputFn, valuesName) {
+        return new Proxy(this, {
+            get(target, prop) {
+                if (typeof prop !== 'string') {
+                    throw new Error(`${valuesName} name should be a string`);
+                }
+                try {
+                    return getInputFn(prop);
+                }
+                catch (err) {
+                    throw new Error(`Error reading "${prop}" ${valuesName}. ${err}`);
+                }
+            }
+        });
+    }
+}
+exports.ProxyObject = ProxyObject;
+//# sourceMappingURL=proxyObject.js.map
 
 /***/ }),
 
@@ -283,10 +349,10 @@ const wildstring = __importStar(__nccwpck_require__(4772));
 const yaml = __importStar(__nccwpck_require__(4603));
 const fs = __importStar(__nccwpck_require__(5630));
 const actionOutputs_1 = __nccwpck_require__(4633);
-const actionInputsObject_1 = __nccwpck_require__(434);
+const proxyObject_1 = __nccwpck_require__(5524);
 const actionInputs_1 = __nccwpck_require__(8366);
 const evaluateCode_1 = __nccwpck_require__(2313);
-const inputsJsonEvaluator_1 = __nccwpck_require__(5752);
+const keyValueJsonStorage_1 = __nccwpck_require__(6402);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -301,24 +367,58 @@ exports.run = run;
 function runImpl() {
     return __awaiter(this, void 0, void 0, function* () {
         const actionInputs = new actionInputs_1.ActionInputs(ghActions.getInput);
-        const inputsJsonEvaluator = new inputsJsonEvaluator_1.InputsJsonEvaluator(ghActions.getInput, actionInputs.jsonInputs);
+        const inputsKVJsonStorage = new keyValueJsonStorage_1.KeyValueJsonStorage(ghActions.getInput, actionInputs.jsonInputs, false);
+        const envVarsKVJsonStorage = new keyValueJsonStorage_1.KeyValueJsonStorage(name => process.env[name] || '', actionInputs.jsonEnvs, true);
         const octokit = process.env.GITHUB_TOKEN
             ? (0, github_1.getOctokit)(process.env.GITHUB_TOKEN)
             : undefined;
         const evalContext = {
-            inputs: new actionInputsObject_1.ActionInputsObject(inputsJsonEvaluator.getInput.bind(inputsJsonEvaluator)),
-            env: process.env,
+            inputs: new proxyObject_1.ProxyObject(inputsKVJsonStorage.getInput.bind(inputsKVJsonStorage), 'input'),
+            env: new proxyObject_1.ProxyObject(inputsKVJsonStorage.getInput.bind(envVarsKVJsonStorage), 'env variable'),
             octokit,
             context: github_1.context,
             semver,
             yaml,
             wildstring,
-            fs
+            fs,
+            core: ghActions
         };
         yield (0, evaluateCode_1.evaluateCode)(evalContext, actionInputs.expression, new actionOutputs_1.ActionOutputs(ghActions.setOutput, actionOutputs_1.formatOutput), actionInputs.extractOutputs, actionInputs.timeoutMs);
     });
 }
 //# sourceMappingURL=runner.js.map
+
+/***/ }),
+
+/***/ 1575:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TrackedTimers = void 0;
+class TrackedTimers {
+    constructor() {
+        this._timeouts = [];
+        this._intervals = [];
+    }
+    setTimeout(callback, ms, ...args) {
+        const timeout = setTimeout(callback, ms, ...args);
+        this._timeouts.push(timeout);
+        return timeout;
+    }
+    setInterval(callback, ms, ...args) {
+        const interval = setInterval(callback, ms, ...args);
+        this._intervals.push(interval);
+        return interval;
+    }
+    clearAll() {
+        this._timeouts.forEach(t => clearTimeout(t));
+        this._intervals.forEach(i => clearInterval(i));
+    }
+}
+exports.TrackedTimers = TrackedTimers;
+//# sourceMappingURL=trackedTimers.js.map
 
 /***/ }),
 
@@ -328,7 +428,7 @@ function runImpl() {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.objectFromEntries = exports.wrapError = void 0;
+exports.isPromise = exports.objectFromEntries = exports.wrapError = void 0;
 function wrapError(fn, messagePrefix) {
     try {
         return fn();
@@ -342,6 +442,13 @@ function objectFromEntries(arr) {
     return Object.assign({}, ...Array.from(arr, ([k, v]) => ({ [k]: v })));
 }
 exports.objectFromEntries = objectFromEntries;
+function isPromise(value) {
+    return value &&
+        typeof value === 'object' &&
+        typeof value.then === 'function' &&
+        typeof value.catch === 'function';
+}
+exports.isPromise = isPromise;
 //# sourceMappingURL=utils.js.map
 
 /***/ }),
