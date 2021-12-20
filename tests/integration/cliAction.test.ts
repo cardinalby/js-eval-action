@@ -257,6 +257,23 @@ describe('js-eval-action', () => {
         expect([0, undefined]).toContain(process.exitCode);
     });
 
+    it('semver assertion', async () => {
+        setInputsEnv({
+            expression: `({ 
+                greater: semver.gte(env.NEW_VERSION, env.OLD_VERSION), 
+                compatible: semver.major(env.NEW_VERSION) === semver.major(env.OLD_VERSION)
+                })`,
+            extractOutputs: 'true'
+        });
+        process.env.OLD_VERSION = '1.2.3';
+        process.env.NEW_VERSION = '1.4.1';
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({greater: 'true', compatible: 'true', timedOut: 'false'});
+        expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
     it('yaml, fs, await', async () => {
         setInputsEnv({
             expression: 'yaml.parse((await fs.readFile("action.yml")).toString()).name'
