@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -20,3 +20,92 @@ jobs:
         run: npm run build
       - name: Test
         run: npm run test
+  functionalSelfTest:
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      matrix:
+        node-version: [ 12.x ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Pack
+        run: npm run pack
+
+      - id: getNextAttemptNumber
+        name: Simple math test
+        uses: cardinalby/js-eval-action@master
+        env:
+          STEP_SIZE: 2
+        with:
+          data: '8'
+          expression: "parseInt(inputs.data) + parseInt(env.STEP_SIZE)"
+
+      - name: Check getNextAttemptNumber result
+        if: steps.getNextAttemptNumber.outputs.result != '10'
+        run: exit 1
+
+      - id: checkNewVersion
+        name: Check new version test using semver
+        uses: cardinalby/js-eval-action@master
+        env:
+          OLD_VERSION: 1.2.3
+          NEW_VERSION: 1.3.0
+        with:
+          expression: |
+            ({ 
+              greater: semver.gte(env.NEW_VERSION, env.OLD_VERSION), 
+              compatible: semver.major(env.NEW_VERSION) === semver.major(env.OLD_VERSION)
+            })
+          extractOutputs: 'true'
+
+      - name: Check checkNewVersion result
+        if: steps.checkNewVersion.outputs.greater != 'true' || steps.checkNewVersion.outputs.compatible != 'true'
+        run: exit 1
+
+      - id: jsonExample
+        name: Json example test
+        uses: cardinalby/js-eval-action@master
+        env:
+          MY_VAR: '{"a": "hello", "b": "hell"}'
+        with:
+          jsonEnvs: MY_VAR
+          expression: "env.MY_VAR.a.indexOf(env.MY_VAR.b) !== -1"
+
+      - name: Check jsonExample result
+        if: steps.jsonExample.outputs.result != 'true'
+        run: exit 1
+
+      - id: getDefaultBranch
+        name: Get default branch test
+        uses: cardinalby/js-eval-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          expression: |
+            (await octokit.rest.repos.get({
+              owner: context.repo.owner, 
+              repo: context.repo.repo
+            })).data.default_branch
+
+      - name: Check getDefaultBranch result
+        if: steps.getDefaultBranch.outputs.result != 'master'
+        run: exit 1
+
+      - id: readYamlExample
+        name: Read yaml test
+        uses: cardinalby/js-eval-action@v1
+        with:
+          expression: 'yaml.parse((await fs.readFile("action.yml")).toString()).name'
+
+      - name: Check getDefaultBranch result
+        if: steps.readYamlExample.outputs.result != 'js-eval-action'
+        run: exit 1
