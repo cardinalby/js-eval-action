@@ -3,12 +3,14 @@ on:
   push:
     branches:
       - 'master'
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - id: getNextAttemptNumber
+        name: Simple math test
         uses: cardinalby/js-eval-action@master
         env:
           STEP_SIZE: 2
@@ -21,6 +23,7 @@ jobs:
         run: exit 1
 
       - id: checkNewVersion
+        name: Check new version test using semver
         uses: cardinalby/js-eval-action@master
         env:
           OLD_VERSION: 1.2.3
@@ -38,6 +41,7 @@ jobs:
         run: exit 1
 
       - id: jsonExample
+        name: Json example test
         uses: cardinalby/js-eval-action@master
         env:
           MY_VAR: '{"a": "hello", "b": "hell"}'
@@ -50,6 +54,7 @@ jobs:
         run: exit 1
 
       - id: getDefaultBranch
+        name: Get default branch test
         uses: cardinalby/js-eval-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -65,6 +70,7 @@ jobs:
         run: exit 1
 
       - id: readYamlExample
+        name: Read yaml test
         uses: cardinalby/js-eval-action@v1
         with:
           expression: 'yaml.parse((await fs.readFile("action.yml")).toString()).name'

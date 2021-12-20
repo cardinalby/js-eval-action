@@ -8,31 +8,44 @@ import {ActionOutputs, formatOutput} from './actionOutputs';
 import {ProxyObject} from './proxyObject';
 import {ActionInputs} from './actionInputs';
 import {evaluateCode} from './evaluateCode';
-import {KeyValueJsonStorage} from "./keyValueJsonStorage";
+import {GetRawValueFn, KeyValueJsonStorage} from "./keyValueJsonStorage";
+import {LoggerFunction} from "./logger";
+import {MatchKeyRuleInterface} from "./matchKeyRule";
 
-export async function run(): Promise<void> {
+export async function run(logger?: LoggerFunction|undefined): Promise<void> {
     try {
-        await runImpl();
+        await runImpl(logger);
     } catch (error) {
         ghActions.setFailed(String(error));
     }
 }
 
-async function runImpl() {
+async function runImpl(logger?: LoggerFunction|undefined) {
     const actionInputs = new ActionInputs(ghActions.getInput);
-    const inputsKVJsonStorage = new KeyValueJsonStorage(
-        ghActions.getInput, actionInputs.jsonInputs, false
-    );
-    const envVarsKVJsonStorage = new KeyValueJsonStorage(
-        name => process.env[name] || '', actionInputs.jsonEnvs, true
-    );
+    const actionOutputs = new ActionOutputs(ghActions.setOutput, formatOutput, logger);
+
     const octokit = process.env.GITHUB_TOKEN
         ? getOctokit(process.env.GITHUB_TOKEN)
         : undefined;
 
+    const createProxy = (
+        getRawValue: GetRawValueFn,
+        jsonKeysRule: MatchKeyRuleInterface,
+        caseSensitive: boolean,
+        entityName: string
+    ) => {
+        const storage = new KeyValueJsonStorage(
+            getRawValue, jsonKeysRule, caseSensitive, entityName, logger
+        );
+        return new ProxyObject(storage.getInput.bind(storage), entityName);
+    }
+
+    const inputsProxy = createProxy(ghActions.getInput, actionInputs.jsonInputs, false, 'input');
+    const envProxy = createProxy(name => process.env[name] || '', actionInputs.jsonEnvs, true, 'env variable');
+
     const evalContext = {
-        inputs: new ProxyObject(inputsKVJsonStorage.getInput.bind(inputsKVJsonStorage), 'input'),
-        env: new ProxyObject(inputsKVJsonStorage.getInput.bind(envVarsKVJsonStorage), 'env variable'),
+        inputs: inputsProxy,
+        env: envProxy,
         octokit,
         context,
         semver,
@@ -45,7 +58,7 @@ async function runImpl() {
     await evaluateCode(
         evalContext,
         actionInputs.expression,
-        new ActionOutputs(ghActions.setOutput, formatOutput),
+        actionOutputs,
         actionInputs.extractOutputs,
         actionInputs.timeoutMs
     )

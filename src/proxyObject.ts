@@ -11,11 +11,7 @@ export class ProxyObject implements ActionInputsObjectInterface{
                 if (typeof prop !== 'string') {
                     throw new Error(`${valuesName} name should be a string`)
                 }
-                try {
-                    return getInputFn(prop);
-                } catch (err) {
-                    throw new Error(`Error reading "${prop}" ${valuesName}. ${err}`);
-                }
+                return getInputFn(prop);
             }
         });
     }

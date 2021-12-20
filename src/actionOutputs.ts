@@ -1,3 +1,5 @@
+import {LoggerFunction} from "./logger";
+
 export interface ActionOutputsObjectInterface {
     [key: string]: any;
 }
@@ -8,15 +10,20 @@ export interface ActionOutputsInterface {
     setOutputs(outputs: ActionOutputsObjectInterface): void;
 }
 
-export type SetOutputFn = (name: string, value: any) => void;
+export type SetOutputFn = (name: string, value: string) => void;
 export type FormatOutputFn = (value: any) => string;
 
 export class ActionOutputs implements ActionOutputsInterface {
     private readonly _setOutput: SetOutputFn;
     private readonly _formatOutput: FormatOutputFn;
 
-    constructor(setOutput: SetOutputFn, formatOutput: FormatOutputFn) {
-        this._setOutput = setOutput;
+    constructor(setOutput: SetOutputFn, formatOutput: FormatOutputFn, logger?: LoggerFunction|undefined) {
+        this._setOutput = logger === undefined
+            ? setOutput
+            : (name, value) => {
+                logger(`"${name}" output = ${value}`);
+                setOutput(name, value);
+            }
         this._formatOutput = formatOutput;
     }
 
