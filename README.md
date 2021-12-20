@@ -18,7 +18,7 @@ of using bash scripts.
     STEP_SIZE: 2
   with:
     data: '8'
-    expression: "parseInt(inputs.attempt) + parseInt(env.STEP_SIZE)"
+    expression: "parseInt(inputs.data) + parseInt(env.STEP_SIZE)"
 
 # steps.getNextAttemptNumber.outputs.result == "10"
 ```

@@ -14,7 +14,7 @@ jobs:
           STEP_SIZE: 2
         with:
           data: '8'
-          expression: "parseInt(inputs.attempt) + parseInt(env.STEP_SIZE)"
+          expression: "parseInt(inputs.data) + parseInt(env.STEP_SIZE)"
 
       - name: Check getNextAttemptNumber result
         if: steps.getNextAttemptNumber.outputs.result != '10'
