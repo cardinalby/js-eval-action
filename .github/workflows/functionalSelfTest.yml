@@ -61,7 +61,7 @@ jobs:
             })).data.default_branch
 
       - name: Check getDefaultBranch result
-        if: steps.jsonExample.outputs.result != 'master'
+        if: steps.getDefaultBranch.outputs.result != 'master'
         run: exit 1
 
       - id: readYamlExample
