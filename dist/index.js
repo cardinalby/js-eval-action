@@ -82,8 +82,13 @@ exports.ActionInputs = ActionInputs;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.formatOutput = exports.ActionOutputs = void 0;
 class ActionOutputs {
-    constructor(setOutput, formatOutput) {
-        this._setOutput = setOutput;
+    constructor(setOutput, formatOutput, logger) {
+        this._setOutput = logger === undefined
+            ? setOutput
+            : (name, value) => {
+                logger(`"${name}" output = ${value}`);
+                setOutput(name, value);
+            };
         this._formatOutput = formatOutput;
     }
     setResult(value) {
@@ -216,11 +221,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.KeyValueJsonStorage = void 0;
 const utils_1 = __nccwpck_require__(918);
 class KeyValueJsonStorage {
-    constructor(getRawValue, jsonKeysRule, caseSensitiveKeys) {
+    constructor(getRawValue, jsonKeysRule, caseSensitiveKeys, entityName = 'value', logger) {
         this._evaluatedCache = new Map();
         this._getRawValue = getRawValue;
         this._jsonKeysRule = jsonKeysRule;
         this._caseSensitiveKeys = caseSensitiveKeys;
+        this._entityName = entityName;
+        this._logger = logger;
     }
     getInput(name) {
         const rawValue = this._getRawValue(name);
@@ -229,7 +236,8 @@ class KeyValueJsonStorage {
             return this._evaluatedCache.get(effectiveName);
         }
         if (this._jsonKeysRule.matches(name)) {
-            const parsed = (0, utils_1.wrapError)(() => JSON.parse(rawValue), `Can't parse "${name}" value as JSON`);
+            const parsed = (0, utils_1.wrapError)(() => JSON.parse(rawValue), `Can't parse "${name}" ${this._entityName} as JSON`);
+            this._logger && this._logger(`${name} ${this._entityName} parsed as JSON`);
             this._evaluatedCache.set(effectiveName, parsed);
             return parsed;
         }
@@ -238,6 +246,39 @@ class KeyValueJsonStorage {
 }
 exports.KeyValueJsonStorage = KeyValueJsonStorage;
 //# sourceMappingURL=keyValueJsonStorage.js.map
+
+/***/ }),
+
+/***/ 5228:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.actionsInfoLogger = void 0;
+const ghActions = __importStar(__nccwpck_require__(2186));
+const actionsInfoLogger = (message) => ghActions.info(message);
+exports.actionsInfoLogger = actionsInfoLogger;
+//# sourceMappingURL=logger.js.map
 
 /***/ }),
 
@@ -292,12 +333,7 @@ class ProxyObject {
                 if (typeof prop !== 'string') {
                     throw new Error(`${valuesName} name should be a string`);
                 }
-                try {
-                    return getInputFn(prop);
-                }
-                catch (err) {
-                    throw new Error(`Error reading "${prop}" ${valuesName}. ${err}`);
-                }
+                return getInputFn(prop);
             }
         });
     }
@@ -353,10 +389,10 @@ const proxyObject_1 = __nccwpck_require__(5524);
 const actionInputs_1 = __nccwpck_require__(8366);
 const evaluateCode_1 = __nccwpck_require__(2313);
 const keyValueJsonStorage_1 = __nccwpck_require__(6402);
-function run() {
+function run(logger) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield runImpl();
+            yield runImpl(logger);
         }
         catch (error) {
             ghActions.setFailed(String(error));
@@ -364,17 +400,22 @@ function run() {
     });
 }
 exports.run = run;
-function runImpl() {
+function runImpl(logger) {
     return __awaiter(this, void 0, void 0, function* () {
         const actionInputs = new actionInputs_1.ActionInputs(ghActions.getInput);
-        const inputsKVJsonStorage = new keyValueJsonStorage_1.KeyValueJsonStorage(ghActions.getInput, actionInputs.jsonInputs, false);
-        const envVarsKVJsonStorage = new keyValueJsonStorage_1.KeyValueJsonStorage(name => process.env[name] || '', actionInputs.jsonEnvs, true);
+        const actionOutputs = new actionOutputs_1.ActionOutputs(ghActions.setOutput, actionOutputs_1.formatOutput, logger);
         const octokit = process.env.GITHUB_TOKEN
             ? (0, github_1.getOctokit)(process.env.GITHUB_TOKEN)
             : undefined;
+        const createProxy = (getRawValue, jsonKeysRule, caseSensitive, entityName) => {
+            const storage = new keyValueJsonStorage_1.KeyValueJsonStorage(getRawValue, jsonKeysRule, caseSensitive, entityName, logger);
+            return new proxyObject_1.ProxyObject(storage.getInput.bind(storage), entityName);
+        };
+        const inputsProxy = createProxy(ghActions.getInput, actionInputs.jsonInputs, false, 'input');
+        const envProxy = createProxy(name => process.env[name] || '', actionInputs.jsonEnvs, true, 'env variable');
         const evalContext = {
-            inputs: new proxyObject_1.ProxyObject(inputsKVJsonStorage.getInput.bind(inputsKVJsonStorage), 'input'),
-            env: new proxyObject_1.ProxyObject(inputsKVJsonStorage.getInput.bind(envVarsKVJsonStorage), 'env variable'),
+            inputs: inputsProxy,
+            env: envProxy,
             octokit,
             context: github_1.context,
             semver,
@@ -383,7 +424,7 @@ function runImpl() {
             fs,
             core: ghActions
         };
-        yield (0, evaluateCode_1.evaluateCode)(evalContext, actionInputs.expression, new actionOutputs_1.ActionOutputs(ghActions.setOutput, actionOutputs_1.formatOutput), actionInputs.extractOutputs, actionInputs.timeoutMs);
+        yield (0, evaluateCode_1.evaluateCode)(evalContext, actionInputs.expression, actionOutputs, actionInputs.extractOutputs, actionInputs.timeoutMs);
     });
 }
 //# sourceMappingURL=runner.js.map
@@ -21915,8 +21956,9 @@ var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const runner_1 = __nccwpck_require__(8209);
+const logger_1 = __nccwpck_require__(5228);
 // noinspection JSIgnoredPromiseFromCall
-(0, runner_1.run)();
+(0, runner_1.run)(logger_1.actionsInfoLogger);
 //# sourceMappingURL=main.js.map
 })();
 
