@@ -389,6 +389,7 @@ const proxyObject_1 = __nccwpck_require__(5524);
 const actionInputs_1 = __nccwpck_require__(8366);
 const evaluateCode_1 = __nccwpck_require__(2313);
 const keyValueJsonStorage_1 = __nccwpck_require__(6402);
+const assert = __nccwpck_require__(9491);
 function run(logger) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -422,7 +423,8 @@ function runImpl(logger) {
             yaml,
             wildstring,
             fs,
-            core: ghActions
+            core: ghActions,
+            assert
         };
         yield (0, evaluateCode_1.evaluateCode)(evalContext, actionInputs.expression, actionOutputs, actionInputs.extractOutputs, actionInputs.timeoutMs);
     });
