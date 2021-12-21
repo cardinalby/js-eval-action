@@ -44,6 +44,42 @@ describe('js-eval-action', () => {
         const commands = readCommands(stdout);
         expect(commands.outputs).toEqual({result: '21', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('validating data', async () => {
+        process.env.attempt = '3';
+        process.env.max = '2';
+        setInputsEnv({
+            expression: `{ \
+              const \
+                attempt = parseInt(env.attempt), \
+                max = parseInt(env.max); \
+              assert(attempt && max && max >= attempt);           
+            }`,
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect([0, undefined]).not.toContain(process.exitCode);
+        expect(commands.outputs).toEqual({timedOut: 'false'});
+    });
+
+    it('validate and return data', async () => {
+        process.env.attempt = '1';
+        process.env.max = '3';
+        setInputsEnv({
+            expression: `{ \
+              const \
+                attempt = parseInt(env.attempt), \
+                max = parseInt(env.max); \
+              assert(attempt && max && max >= attempt);  
+              return attempt + 1;              
+            }`,
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect([0, undefined]).toContain(process.exitCode);
+        expect(commands.outputs).toEqual({result: '2', timedOut: 'false'});
     });
 
     it('extract outputs', async () => {

@@ -41,6 +41,24 @@ of using bash scripts.
 # steps.checkNewVersion.outputs.compatible == "true"
 ```
 
+### Validate [dispatched_workflow](https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows#workflow_dispatch) inputs
+
+```yaml
+- name: Validate workflow_dispatch inputs
+  uses: ./
+  env:
+    attempt: ${{ github.event.inputs.attemptNumber }}
+    max: ${{ github.event.inputs.maxAttempts }}
+  with:
+    expression: |
+      {
+        const attempt = parseInt(env.attempt), max = parseInt(env.max);
+        assert(attempt && max && max >= attempt);
+      } 
+
+# Will fail if github.event.inputs are invalid
+```
+
 ### Read JSON data
 ```yaml
 - id: jsonExample
@@ -205,3 +223,9 @@ Contains [wildstring](https://www.npmjs.com/package/wildstring) library.
 ### `fs`
 
 Contains [fs-extra](https://www.npmjs.com/package/fs-extra) library.
+
+### `assert`
+
+Contains NodJS [assert](https://nodejs.org/docs/latest-v12.x/api/assert.html) library.<br>
+Note: `console.assert()` doesn't cause an Error in NodeJS since version 10. It's the reason to
+use `assert(value)`, `assert.deepStrictEqual(actual, expected)`, etc. instead.

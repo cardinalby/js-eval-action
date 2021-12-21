@@ -11,6 +11,7 @@ import {evaluateCode} from './evaluateCode';
 import {GetRawValueFn, KeyValueJsonStorage} from "./keyValueJsonStorage";
 import {LoggerFunction} from "./logger";
 import {MatchKeyRuleInterface} from "./matchKeyRule";
+import assert = require("assert");
 
 export async function run(logger?: LoggerFunction|undefined): Promise<void> {
     try {
@@ -52,7 +53,8 @@ async function runImpl(logger?: LoggerFunction|undefined) {
         yaml,
         wildstring,
         fs,
-        core: ghActions
+        core: ghActions,
+        assert
     };
 
     await evaluateCode(
