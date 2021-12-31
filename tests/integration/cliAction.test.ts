@@ -321,6 +321,31 @@ describe('js-eval-action', () => {
         expect([0, undefined]).toContain(process.exitCode);
     });
 
+    it('dotenv test', async () => {
+        setInputsEnv({
+            expression: 'dotenv.parse(fs.readFileSync("tests.env.example"))',
+            extractOutputs: 'true'
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({
+            GITHUB_TOKEN: 'YOUR_TOKEN_FOR_TESTS',
+            GITHUB_REPOSITORY: 'cardinalby/js-eval-action',
+            timedOut: "false"
+        });
+        expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('dotenv test2', async () => {
+        setInputsEnv({
+            expression: `
+                Object.entries(dotenv.parse(fs.readFileSync("tests.env.example")))
+                    .forEach(e => core.exportVariable(e[0], e[1]))`
+        });
+        await run();
+    });
+
     it("respect timeoutMs", async () => {
         setInputsEnv({
             expression: "new Promise(resolve => { setTimeout(() => resolve(22), 1000) })",

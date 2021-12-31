@@ -2,6 +2,7 @@ import * as ghActions from '@actions/core';
 import {context, getOctokit} from '@actions/github';
 import * as semver from 'semver';
 import * as wildstring from 'wildstring';
+import * as dotenv from 'dotenv';
 import * as yaml from 'yaml';
 import * as fs from 'fs-extra';
 import {ActionOutputs, formatOutput} from './actionOutputs';
@@ -52,6 +53,7 @@ async function runImpl(logger?: LoggerFunction|undefined) {
         semver,
         yaml,
         wildstring,
+        dotenv,
         fs,
         core: ghActions,
         assert

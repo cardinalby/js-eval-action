@@ -41,6 +41,22 @@ of using bash scripts.
 # steps.checkNewVersion.outputs.compatible == "true"
 ```
 
+### Export env variables from .env file to a job env
+
+```yaml
+- name: Export env variables
+  uses: ./
+  env:
+    ENV_FILE: 'constants.env'
+  with:
+    expression: |
+      Object.entries(
+        dotenv.parse(fs.readFileSync(env.ENV_FILE))
+      ).forEach(
+        e => core.exportVariable(e[0], e[1])
+      )
+```
+
 ### Validate [dispatched_workflow](https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows#workflow_dispatch) inputs
 
 ```yaml
@@ -219,6 +235,10 @@ Contains [yaml](https://www.npmjs.com/package/yaml) library.
 ### `wildstring`
 
 Contains [wildstring](https://www.npmjs.com/package/wildstring) library.
+
+### `dotenv`
+
+Contains [dotenv](https://www.npmjs.com/package/dotenv) library.
 
 ### `fs`
 
