@@ -142,13 +142,13 @@ jobs:
         run: exit 1
 
       - id: exportDotEnv
-        name: Export env variables from tests.env.example
+        name: Export env variables from env file
         uses: ./
         with:
           expression: |
             Object.entries(dotenvExpand({
               parsed: dotenv.parse(fs.readFileSync("tests/integration/values.env"))
-            })
+            }))
             .parsed
             .forEach(e => core.exportVariable(e[0], e[1]))
 
