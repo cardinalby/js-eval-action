@@ -376,6 +376,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const ghActions = __importStar(__nccwpck_require__(2186));
@@ -383,6 +386,7 @@ const github_1 = __nccwpck_require__(5438);
 const semver = __importStar(__nccwpck_require__(1383));
 const wildstring = __importStar(__nccwpck_require__(4772));
 const dotenv = __importStar(__nccwpck_require__(2437));
+const dotenv_expand_1 = __importDefault(__nccwpck_require__(7967));
 const yaml = __importStar(__nccwpck_require__(4603));
 const fs = __importStar(__nccwpck_require__(5630));
 const actionOutputs_1 = __nccwpck_require__(4633);
@@ -424,6 +428,7 @@ function runImpl(logger) {
             yaml,
             wildstring,
             dotenv,
+            dotenvExpand: dotenv_expand_1.default,
             fs,
             core: ghActions,
             assert
@@ -4484,6 +4489,60 @@ class Deprecation extends Error {
 }
 
 exports.Deprecation = Deprecation;
+
+
+/***/ }),
+
+/***/ 7967:
+/***/ ((module) => {
+
+"use strict";
+
+
+var dotenvExpand = function (config) {
+  // if ignoring process.env, use a blank object
+  var environment = config.ignoreProcessEnv ? {} : process.env
+
+  var interpolate = function (envValue) {
+    var matches = envValue.match(/(.?\${?(?:[a-zA-Z0-9_]+)?}?)/g) || []
+
+    return matches.reduce(function (newEnv, match) {
+      var parts = /(.?)\${?([a-zA-Z0-9_]+)?}?/g.exec(match)
+      var prefix = parts[1]
+
+      var value, replacePart
+
+      if (prefix === '\\') {
+        replacePart = parts[0]
+        value = replacePart.replace('\\$', '$')
+      } else {
+        var key = parts[2]
+        replacePart = parts[0].substring(prefix.length)
+        // process.env value 'wins' over .env file's value
+        value = environment.hasOwnProperty(key) ? environment[key] : (config.parsed[key] || '')
+
+        // Resolve recursive interpolations
+        value = interpolate(value)
+      }
+
+      return newEnv.replace(replacePart, value)
+    }, envValue)
+  }
+
+  for (var configKey in config.parsed) {
+    var value = environment.hasOwnProperty(configKey) ? environment[configKey] : config.parsed[configKey]
+
+    config.parsed[configKey] = interpolate(value)
+  }
+
+  for (var processKey in config.parsed) {
+    environment[processKey] = config.parsed[processKey]
+  }
+
+  return config
+}
+
+module.exports = dotenvExpand
 
 
 /***/ }),
