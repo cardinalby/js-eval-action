@@ -240,6 +240,10 @@ Contains [wildstring](https://www.npmjs.com/package/wildstring) library.
 
 Contains [dotenv](https://www.npmjs.com/package/dotenv) library.
 
+### `dotenvExpand`
+
+Contains [dotenv-expand](https://www.npmjs.com/package/dotenv-expand) exported function.
+
 ### `fs`
 
 Contains [fs-extra](https://www.npmjs.com/package/fs-extra) library.

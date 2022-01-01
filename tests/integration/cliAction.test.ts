@@ -323,14 +323,14 @@ describe('js-eval-action', () => {
 
     it('dotenv test', async () => {
         setInputsEnv({
-            expression: 'dotenv.parse(fs.readFileSync("tests.env.example"))',
+            expression: 'dotenvExpand({parsed: dotenv.parse(fs.readFileSync("tests/integration/values.env"))}).parsed',
             extractOutputs: 'true'
         });
         await run();
         const commands = readCommands(stdout);
         expect(commands.outputs).toEqual({
-            GITHUB_TOKEN: 'YOUR_TOKEN_FOR_TESTS',
-            GITHUB_REPOSITORY: 'cardinalby/js-eval-action',
+            VALUE1: 'abc',
+            VALUE2: '123abc456',
             timedOut: "false"
         });
         expect(commands.errors).toEqual([]);

@@ -140,3 +140,18 @@ jobs:
       - name: Check getDefaultBranch result
         if: steps.readYamlExample.outputs.result != 'js-eval-action'
         run: exit 1
+
+      - id: exportDotEnv
+        name: Export env variables from tests.env.example
+        uses: ./
+        with:
+          expression: |
+            Object.entries(dotenvExpand({
+              parsed: dotenv.parse(fs.readFileSync("tests/integration/values.env"))
+            })
+            .parsed
+            .forEach(e => core.exportVariable(e[0], e[1]))
+
+      - name: Check exportDotEnv result
+        if: env.VALUE1 != 'abc' || env.VALUE2 != '123abc456'
+        run: exit 1
