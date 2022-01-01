@@ -116,6 +116,10 @@ For this particular case you can use a dedicated [octokit/request-action](https:
 # steps.readYamlExample.outputs.result == "property value"
 ```
 
+### More examples 
+
+Actual self-test functional examples are in `.github/workflows/test.yml`
+
 ## Inputs
 
 ### `expression` **Required**
