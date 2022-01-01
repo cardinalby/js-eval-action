@@ -144,13 +144,16 @@ jobs:
       - id: exportDotEnv
         name: Export env variables from env file
         uses: ./
+        env:
+          ENV_FILE_PATH: tests/integration/values.env
         with:
           expression: |
-            Object.entries(dotenvExpand({
-              parsed: dotenv.parse(fs.readFileSync("tests/integration/values.env"))
-            }))
-            .parsed
-            .forEach(e => core.exportVariable(e[0], e[1]))
+            Object.entries(
+              dotenvExpand({
+                parsed: dotenv.parse(fs.readFileSync(env.ENV_FILE_PATH))
+              })
+              .parsed
+            ).forEach(e => core.exportVariable(e[0], e[1]))
 
       - name: Check exportDotEnv result
         if: env.VALUE1 != 'abc' || env.VALUE2 != '123abc456'
