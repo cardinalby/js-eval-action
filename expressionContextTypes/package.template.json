@@ -1,0 +1,36 @@
+{
+  "name": "js-eval-action-expression-context",
+  "private": false,
+  "version": "%to-be-inserted%",
+  "description": "Types for the js-eval-action GitHub Action expression",
+  "main": "",
+  "types": "globals.d.ts",
+  "repository": {
+    "url": "https://github.com/cardinalby/js-eval-action",
+    "directory": "expressionContextTypes/dist"
+  },
+  "keywords": [
+      "js-eval-action"
+  ],
+  "author": "cardinalby",
+  "license": "MIT",
+  "files": [
+    "*.d.ts",
+    "LICENSE",
+    "README.md"
+  ],
+  "dependencies": {
+    "@actions/core": "%to-be-inserted%",
+    "@actions/github": "%to-be-inserted%",
+    "semver": "%to-be-inserted%",
+    "yaml": "%to-be-inserted%",
+    "fs-extra": "%to-be-inserted%",
+    "wildstring": "%to-be-inserted%",
+    "dotenv": "%to-be-inserted%",
+    "dotenv-expand": "%to-be-inserted%",
+    "@types/node": "%to-be-inserted%",
+    "@types/semver": "%to-be-inserted%",
+    "@types/fs-extra": "%to-be-inserted%",
+    "@types/wildstring": "%to-be-inserted%"
+  }
+}

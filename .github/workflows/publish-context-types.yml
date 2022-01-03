@@ -1,0 +1,33 @@
+# Publish expression context types as a separate package
+name: publish-context-types
+on:
+  push:
+    tags:
+      - '*.*.*'
+  workflow_dispatch:
+jobs:
+  npm-publish:
+    if: github.ref_type == 'tag'
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@master
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org/
+
+      - name: make package.json
+        env:
+          EXPRESSION_TYPES_VERSION: ${{ github.ref_name }}
+        run: npm run buildExpressionContextTypesPkg
+
+      - run: npm install
+        working-directory: ./expressionContextTypes/dist
+
+      - run: npm publish
+        working-directory: ./expressionContextTypes/dist
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}

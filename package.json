@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc",
     "pack": "ncc build",
+    "buildExpressionContextTypesPkg": "node expressionContextTypes/preparePackageJson.js",
     "test": "jest",
     "all": "npm run build && npm run pack"
   },

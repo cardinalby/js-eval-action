@@ -1,5 +1,5 @@
 export interface ActionInputsObjectInterface {
-    [key: string]: any;
+    [key: string]: any|string;
 }
 
 export type GetInputFn = (name: string) => string;
