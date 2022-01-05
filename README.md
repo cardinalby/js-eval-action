@@ -1,5 +1,6 @@
 [![test](https://github.com/cardinalby/js-eval-action/actions/workflows/test.yml/badge.svg)](https://github.com/cardinalby/js-eval-action/actions/workflows/test.yml)
 [![build](https://github.com/cardinalby/js-eval-action/actions/workflows/build.yml/badge.svg)](https://github.com/cardinalby/js-eval-action/actions/workflows/build.yml)
+[![publish-context-types](https://github.com/cardinalby/js-eval-action/actions/workflows/publish-context-types.yml/badge.svg)](https://github.com/cardinalby/js-eval-action/actions/workflows/publish-context-types.yml)
 
 ## Eval JS expression as a workflow step
 
@@ -122,8 +123,9 @@ Actual self-test functional examples are in `.github/workflows/test.yml`
 
 ## Inputs
 
-### `expression` **Required**
+### `expression`
 JS expression that returns a value. 
+* You have to set either `expression` input or `jsFile`
 * By default, (if `extractOutputs` input is `false`) 
 the value will be [serialized](#output-serialization) to string and put to `result` output. 
 If `extractOutputs` iss `true`, the value has to be an object. Each property of it will be considered 
@@ -134,6 +136,12 @@ it's result will be taken.
 * You can use curly braces with return statement: `{ let x = 5; x += 2; return x; }` 
 * To return the object directly wrap it into parentheses: `({out1: 5, out2: 10})`; 
 * Do not pass untrusted string to `expression`!
+
+### `jsFile`
+JavaScript file containing code that will be evaluated.
+
+* You have to set either `expression` input or `jsFile`
+* **This code is not wrapped** like the `expression` input code, but evaluated directly instead.
 
 ### `extractOutputs` Default: `false`
 Requires the value returned by the expression to be an object. Each property of it will be considered
@@ -252,8 +260,12 @@ Contains [dotenv-expand](https://www.npmjs.com/package/dotenv-expand) exported f
 
 Contains [fs-extra](https://www.npmjs.com/package/fs-extra) library.
 
+### `path`
+
+Contains NodeJS [path](https://nodejs.org/docs/latest-v16.x/api/path.html) module.
+
 ### `assert`
 
-Contains NodJS [assert](https://nodejs.org/docs/latest-v12.x/api/assert.html) library.<br>
+Contains NodeJS [assert](https://nodejs.org/docs/latest-v16.x/api/assert.html) module.<br>
 Note: `console.assert()` doesn't cause an Error in NodeJS since version 10. It's the reason to
 use `assert(value)`, `assert.deepStrictEqual(actual, expected)`, etc. instead.

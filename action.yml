@@ -4,7 +4,10 @@ author: 'cardinalby'
 inputs:
   expression:
     description: 'JS expression to evaluate'
-    required: true
+    required: false
+  jsFile:
+    description: 'JS file to evaluate expression from'
+    required: false
   jsonInputs:
     description: 'Parse listed inputs as JSON (use "|" separator). * to parse all'
     required: false

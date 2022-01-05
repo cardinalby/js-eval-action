@@ -20,6 +20,9 @@ export async function run(logger?: LoggerFunction|undefined): Promise<void> {
     try {
         await runImpl(logger);
     } catch (error) {
+        if (typeof error == 'object' && error && error.hasOwnProperty('stack')) {
+            console.log((error as any).stack);
+        }
         ghActions.setFailed(String(error));
     }
 }

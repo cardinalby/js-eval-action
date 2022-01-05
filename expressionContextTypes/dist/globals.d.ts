@@ -12,7 +12,7 @@ import * as pathLib from 'path';
 declare global {
     const
         inputs:  {[key: string]: any|string, expression: string, data: string},
-        env: {[key: string]: any|string},
+        env: {[key: string]: any|string, GITHUB_TOKEN: string},
         octokit: ReturnType<typeof github.getOctokit>,
         context: typeof github.context,
         semver: typeof semverLib,
