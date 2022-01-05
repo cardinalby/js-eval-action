@@ -405,6 +405,9 @@ function run(logger) {
             yield runImpl(logger);
         }
         catch (error) {
+            if (typeof error == 'object' && error && error.hasOwnProperty('stack')) {
+                console.log(error.stack);
+            }
             ghActions.setFailed(String(error));
         }
     });
