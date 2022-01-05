@@ -14,7 +14,8 @@ export async function evaluateCode(
     code: string,
     outputs: ActionOutputsInterface,
     extractOutputs: boolean,
-    timeoutMs?: number|undefined
+    timeoutMs?: number|undefined,
+    filename?: string|undefined
 ) {
     const trackedTimers = new TrackedTimers();
     // setTimeout and setInterval are not available inside vm
@@ -38,7 +39,7 @@ export async function evaluateCode(
     let runResult: any;
     try {
         runResult = vm.runInNewContext(
-            code, context, {timeout: timeoutMs}
+            code, context, {timeout: timeoutMs, filename}
         );
         if (isPromise(runResult) && timeoutTimerPromise) {
             result = await Promise.race([runResult, timeoutTimerPromise]);

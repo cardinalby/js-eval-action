@@ -101,6 +101,7 @@ async function runImpl(logger?: LoggerFunction|undefined) {
         expressionCode,
         actionOutputs,
         actionInputs.extractOutputs,
-        actionInputs.timeoutMs
+        actionInputs.timeoutMs,
+        actionInputs.jsFile
     )
 }
