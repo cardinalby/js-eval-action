@@ -159,7 +159,7 @@ function wrapExpression(expression) {
     return `(async () => ${expression})()`;
 }
 exports.wrapExpression = wrapExpression;
-function evaluateCode(evalContext, code, outputs, extractOutputs, timeoutMs) {
+function evaluateCode(evalContext, code, outputs, extractOutputs, timeoutMs, filename) {
     return __awaiter(this, void 0, void 0, function* () {
         const trackedTimers = new trackedTimers_1.TrackedTimers();
         // setTimeout and setInterval are not available inside vm
@@ -178,7 +178,7 @@ function evaluateCode(evalContext, code, outputs, extractOutputs, timeoutMs) {
         let result;
         let runResult;
         try {
-            runResult = vm_1.default.runInNewContext(code, context, { timeout: timeoutMs });
+            runResult = vm_1.default.runInNewContext(code, context, { timeout: timeoutMs, filename });
             if ((0, utils_1.isPromise)(runResult) && timeoutTimerPromise) {
                 result = yield Promise.race([runResult, timeoutTimerPromise]);
             }
@@ -466,7 +466,7 @@ function runImpl(logger) {
             actionOutputs.setTimedOut(false);
             throw error;
         }
-        yield (0, evaluateCode_1.evaluateCode)(evalContext, expressionCode, actionOutputs, actionInputs.extractOutputs, actionInputs.timeoutMs);
+        yield (0, evaluateCode_1.evaluateCode)(evalContext, expressionCode, actionOutputs, actionInputs.extractOutputs, actionInputs.timeoutMs, actionInputs.jsFile);
     });
 }
 //# sourceMappingURL=runner.js.map
