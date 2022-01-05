@@ -10,6 +10,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActionInputs = void 0;
 const matchKeyRule_1 = __nccwpck_require__(7259);
 const INPUT_EXPRESSION = 'expression';
+const JS_FILE = 'jsFile';
 const INPUT_JSON_INPUTS = 'jsonInputs';
 const INPUT_JSON_ENVS = 'jsonEnvs';
 const INPUT_EXTRACT_OUTPUTS = 'extractOutputs';
@@ -19,11 +20,10 @@ class ActionInputs {
         this._readRawInput = readRawInput;
     }
     get expression() {
-        const expression = this._readRawInput(INPUT_EXPRESSION, { required: true, trimWhitespace: true });
-        if (expression.length === 0) {
-            throw new Error('Empty "expression" input');
-        }
-        return expression;
+        return this._readRawInput(INPUT_EXPRESSION, { trimWhitespace: true }) || undefined;
+    }
+    get jsFile() {
+        return this._readRawInput(JS_FILE) || undefined;
     }
     get jsonInputs() {
         return ActionInputs.getNamesList(this._readRawInput(INPUT_JSON_INPUTS), false);
@@ -148,14 +148,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.evaluateCode = exports.TimedOutError = void 0;
+exports.evaluateCode = exports.wrapExpression = exports.TimedOutError = void 0;
 const vm_1 = __importDefault(__nccwpck_require__(6144));
 const trackedTimers_1 = __nccwpck_require__(1575);
 const utils_1 = __nccwpck_require__(918);
 class TimedOutError extends Error {
 }
 exports.TimedOutError = TimedOutError;
-function evaluateCode(evalContext, expression, outputs, extractOutputs, timeoutMs) {
+function wrapExpression(expression) {
+    return `(async () => ${expression})()`;
+}
+exports.wrapExpression = wrapExpression;
+function evaluateCode(evalContext, code, outputs, extractOutputs, timeoutMs) {
     return __awaiter(this, void 0, void 0, function* () {
         const trackedTimers = new trackedTimers_1.TrackedTimers();
         // setTimeout and setInterval are not available inside vm
@@ -172,10 +176,9 @@ function evaluateCode(evalContext, expression, outputs, extractOutputs, timeoutM
             });
         }
         let result;
-        const expressionWrapper = `(async () => ${expression})()`;
         let runResult;
         try {
-            runResult = vm_1.default.runInNewContext(expressionWrapper, context, { timeout: timeoutMs });
+            runResult = vm_1.default.runInNewContext(code, context, { timeout: timeoutMs });
             if ((0, utils_1.isPromise)(runResult) && timeoutTimerPromise) {
                 result = yield Promise.race([runResult, timeoutTimerPromise]);
             }
@@ -389,6 +392,7 @@ const dotenv = __importStar(__nccwpck_require__(2437));
 const dotenv_expand_1 = __importDefault(__nccwpck_require__(7967));
 const yaml = __importStar(__nccwpck_require__(4603));
 const fs = __importStar(__nccwpck_require__(5630));
+const path = __importStar(__nccwpck_require__(1017));
 const actionOutputs_1 = __nccwpck_require__(4633);
 const proxyObject_1 = __nccwpck_require__(5524);
 const actionInputs_1 = __nccwpck_require__(8366);
@@ -406,34 +410,60 @@ function run(logger) {
     });
 }
 exports.run = run;
+function createProxyObject(logger, getRawValue, jsonKeysRule, caseSensitive, entityName) {
+    const storage = new keyValueJsonStorage_1.KeyValueJsonStorage(getRawValue, jsonKeysRule, caseSensitive, entityName, logger);
+    return new proxyObject_1.ProxyObject(storage.getInput.bind(storage), entityName);
+}
+function getEvalContext(jsonInputs, jsonEnvs, logger) {
+    const inputsProxy = createProxyObject(logger, ghActions.getInput, jsonInputs, false, 'input');
+    const envProxy = createProxyObject(logger, name => process.env[name] || '', jsonEnvs, true, 'env variable');
+    const octokit = process.env.GITHUB_TOKEN
+        ? (0, github_1.getOctokit)(process.env.GITHUB_TOKEN)
+        : undefined;
+    return {
+        inputs: inputsProxy,
+        env: envProxy,
+        octokit,
+        context: github_1.context,
+        semver,
+        yaml,
+        wildstring,
+        dotenv,
+        dotenvExpand: dotenv_expand_1.default,
+        fs,
+        path,
+        core: ghActions,
+        assert
+    };
+}
+function getExpressionCode(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!!inputs.expression === !!inputs.jsFile) {
+            throw new Error('Either "expression" or "jsFile" input should be set');
+        }
+        if (inputs.expression) {
+            return (0, evaluateCode_1.wrapExpression)(inputs.expression);
+        }
+        if (inputs.jsFile) {
+            return (yield fs.readFile(inputs.jsFile)).toString();
+        }
+        assert.fail('not reachable');
+    });
+}
 function runImpl(logger) {
     return __awaiter(this, void 0, void 0, function* () {
         const actionInputs = new actionInputs_1.ActionInputs(ghActions.getInput);
         const actionOutputs = new actionOutputs_1.ActionOutputs(ghActions.setOutput, actionOutputs_1.formatOutput, logger);
-        const octokit = process.env.GITHUB_TOKEN
-            ? (0, github_1.getOctokit)(process.env.GITHUB_TOKEN)
-            : undefined;
-        const createProxy = (getRawValue, jsonKeysRule, caseSensitive, entityName) => {
-            const storage = new keyValueJsonStorage_1.KeyValueJsonStorage(getRawValue, jsonKeysRule, caseSensitive, entityName, logger);
-            return new proxyObject_1.ProxyObject(storage.getInput.bind(storage), entityName);
-        };
-        const inputsProxy = createProxy(ghActions.getInput, actionInputs.jsonInputs, false, 'input');
-        const envProxy = createProxy(name => process.env[name] || '', actionInputs.jsonEnvs, true, 'env variable');
-        const evalContext = {
-            inputs: inputsProxy,
-            env: envProxy,
-            octokit,
-            context: github_1.context,
-            semver,
-            yaml,
-            wildstring,
-            dotenv,
-            dotenvExpand: dotenv_expand_1.default,
-            fs,
-            core: ghActions,
-            assert
-        };
-        yield (0, evaluateCode_1.evaluateCode)(evalContext, actionInputs.expression, actionOutputs, actionInputs.extractOutputs, actionInputs.timeoutMs);
+        const evalContext = getEvalContext(actionInputs.jsonInputs, actionInputs.jsonEnvs, logger);
+        let expressionCode;
+        try {
+            expressionCode = yield getExpressionCode(actionInputs);
+        }
+        catch (error) {
+            actionOutputs.setTimedOut(false);
+            throw error;
+        }
+        yield (0, evaluateCode_1.evaluateCode)(evalContext, expressionCode, actionOutputs, actionInputs.extractOutputs, actionInputs.timeoutMs);
     });
 }
 //# sourceMappingURL=runner.js.map
