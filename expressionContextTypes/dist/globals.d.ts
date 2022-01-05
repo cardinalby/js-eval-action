@@ -1,4 +1,5 @@
 import * as assertModule from "assert";
+import * as bufferModule from "buffer";
 import * as ghActions from '@actions/core';
 import * as github from '@actions/github';
 import * as semverLib from 'semver';
@@ -23,5 +24,6 @@ declare global {
         wildstring: typeof wildstringLib,
         assert: typeof assertModule,
         fs: typeof fsExtraLib,
-        path: typeof pathLib
+        path: typeof pathLib,
+        buffer: typeof bufferModule
 }

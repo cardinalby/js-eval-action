@@ -269,3 +269,8 @@ Contains NodeJS [path](https://nodejs.org/docs/latest-v16.x/api/path.html) modul
 Contains NodeJS [assert](https://nodejs.org/docs/latest-v16.x/api/assert.html) module.<br>
 Note: `console.assert()` doesn't cause an Error in NodeJS since version 10. It's the reason to
 use `assert(value)`, `assert.deepStrictEqual(actual, expected)`, etc. instead.
+
+### `buffer`, `Buffer`
+
+Contains NodeJS [buffer](https://nodejs.org/docs/latest-v16.x/api/buffer.html) module.<br>
+and `Buffer` constructor available separately from module.

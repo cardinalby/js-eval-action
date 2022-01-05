@@ -15,6 +15,7 @@ import {GetRawValueFn, KeyValueJsonStorage} from "./keyValueJsonStorage";
 import {LoggerFunction} from "./logger";
 import {MatchKeyRuleInterface} from "./matchKeyRule";
 import assert = require("assert");
+import buffer from "buffer";
 
 export async function run(logger?: LoggerFunction|undefined): Promise<void> {
     try {
@@ -67,7 +68,9 @@ function getEvalContext(
         fs,
         path,
         core: ghActions,
-        assert
+        assert,
+        buffer,
+        Buffer: buffer.Buffer
     };
 }
 

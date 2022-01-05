@@ -13,7 +13,7 @@ describe('js-eval-action', () => {
     const unhookIntercept = interceptStdout(data => {
         stdout += data;
         // comment this line to debug output
-        return '';
+        //return '';
     })
 
     beforeAll(() => {
@@ -337,13 +337,18 @@ describe('js-eval-action', () => {
         expect([0, undefined]).toContain(process.exitCode);
     });
 
-    it('dotenv test2', async () => {
+    it('buffer', async () => {
         setInputsEnv({
-            expression: `
-                Object.entries(dotenv.parse(fs.readFileSync("tests.env.example")))
-                    .forEach(e => core.exportVariable(e[0], e[1]))`
+            expression: `Buffer.from(new ArrayBuffer(10)).length === 10 && buffer.Buffer === Buffer`
         });
         await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({
+            result: 'true',
+            timedOut: "false"
+        });
+        expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
     });
 
     it("respect timeoutMs", async () => {
