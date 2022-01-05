@@ -138,10 +138,15 @@ it's result will be taken.
 * Do not pass untrusted string to `expression`!
 
 ### `jsFile`
-JavaScript file containing code that will be evaluated.
+Path to a file containing JS code that will be evaluated. Use instead of `expression` if you want to 
+extract JavaScript code to the separate file. 
 
 * You have to set either `expression` input or `jsFile`
-* **This code is not wrapped** like the `expression` input code, but evaluated directly instead.
+* **This code is not wrapped** like the `expression` input code, but evaluated directly instead and value
+  is parsed according to the same rules. It's recommended to wrap it by yourself: `(async () => 2 * 2)()`.
+  Replace `2 * 2` by your expression. 
+* Look at [js-eval-action-expression-context](https://www.npmjs.com/package/js-eval-action-expression-context)
+  package for type declarations if you want to enable type checking and autocompletion in your JS file.
 
 ### `extractOutputs` Default: `false`
 Requires the value returned by the expression to be an object. Each property of it will be considered
