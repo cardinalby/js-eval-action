@@ -5,9 +5,13 @@ import {isPromise} from "./utils";
 
 export class TimedOutError extends Error {}
 
+export function wrapExpression(expression: string): string {
+    return `(async () => ${expression})()`;
+}
+
 export async function evaluateCode(
     evalContext: object,
-    expression: string,
+    code: string,
     outputs: ActionOutputsInterface,
     extractOutputs: boolean,
     timeoutMs?: number|undefined
@@ -31,11 +35,10 @@ export async function evaluateCode(
         });
     }
     let result: any;
-    const expressionWrapper = `(async () => ${expression})()`;
     let runResult: any;
     try {
         runResult = vm.runInNewContext(
-            expressionWrapper, context, {timeout: timeoutMs}
+            code, context, {timeout: timeoutMs}
         );
         if (isPromise(runResult) && timeoutTimerPromise) {
             result = await Promise.race([runResult, timeoutTimerPromise]);

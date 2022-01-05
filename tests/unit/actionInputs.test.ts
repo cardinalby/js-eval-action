@@ -18,7 +18,7 @@ describe('ActionInputs', () => {
         expect(tester('2 * 2')).toEqual('2 * 2');
         expect(tester('21')).toEqual('21');
         expect(tester('x')).toEqual('x');
-        expect(() => tester('')).toThrow();
+        expect(tester('')).toBeUndefined()
     });
 
     it('should read extractOutputs', () => {

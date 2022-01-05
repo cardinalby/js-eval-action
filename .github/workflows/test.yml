@@ -1,5 +1,10 @@
 name: "test"
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -157,4 +162,14 @@ jobs:
 
       - name: Check exportDotEnv result
         if: env.VALUE1 != 'abc' || env.VALUE2 != '123abc456'
+        run: exit 1
+
+      - id: useJsFile
+        name: Use jsFile input
+        uses: ./
+        with:
+          jsFile: tests/integration/evaluateJsFileCases/complicated.js
+
+      - name: Check useJsFile result
+        if: steps.useJsFile.outputs.result != 22
         run: exit 1

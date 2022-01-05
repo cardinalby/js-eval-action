@@ -26,5 +26,3 @@ if (templatePackageJson.version === placeholder) {
 }
 
 fs.writeFileSync('expressionContextTypes/dist/package.json', JSON.stringify(templatePackageJson));
-
-

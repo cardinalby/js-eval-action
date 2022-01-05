@@ -2,13 +2,15 @@ import {InputOptions} from "@actions/core";
 import {MatchKeyRule, MatchKeyRuleInterface} from "./matchKeyRule";
 
 const INPUT_EXPRESSION = 'expression';
+const JS_FILE = 'jsFile';
 const INPUT_JSON_INPUTS = 'jsonInputs';
 const INPUT_JSON_ENVS = 'jsonEnvs';
 const INPUT_EXTRACT_OUTPUTS = 'extractOutputs';
 const INPUT_TIMEOUT = 'timeoutMs';
 
 export interface ActionInputsInterface {
-    expression: string;
+    expression: string|undefined;
+    jsFile: string|undefined;
     jsonInputs: MatchKeyRuleInterface;
     jsonEnvs: MatchKeyRuleInterface;
     extractOutputs: boolean;
@@ -24,14 +26,14 @@ export class ActionInputs implements ActionInputsInterface {
         this._readRawInput = readRawInput;
     }
 
-    get expression(): string {
-        const expression = this._readRawInput(
-            INPUT_EXPRESSION, { required: true, trimWhitespace: true }
-        );
-        if (expression.length === 0) {
-            throw new Error('Empty "expression" input');
-        }
-        return expression;
+    get expression(): string|undefined {
+        return this._readRawInput(
+            INPUT_EXPRESSION, { trimWhitespace: true }
+        ) || undefined;
+    }
+
+    get jsFile(): string|undefined {
+        return this._readRawInput(JS_FILE) || undefined;
     }
 
     get jsonInputs(): MatchKeyRule {

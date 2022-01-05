@@ -96,7 +96,7 @@ describe('evaluateCode', () => {
         await expect(async () =>
             await evaluateCode(
                 {},
-                '{ let x = 0; for (let i = 0; i < 100000000; i++) { x += i*i; }; return x; }',
+                '(() => { let x = 7; for (let i = 0; i < 100000000; i++) { x += i*i; }; return x; })()',
                 outputsFake,
                 false,
                 100

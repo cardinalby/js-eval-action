@@ -7,6 +7,7 @@ import * as dotenvLib from 'dotenv';
 import dotenvExpandLib from 'dotenv-expand';
 import * as yamlLib from 'yaml';
 import * as fsExtraLib from 'fs-extra';
+import * as pathLib from 'path';
 
 declare global {
     const
@@ -21,5 +22,6 @@ declare global {
         core: typeof ghActions,
         wildstring: typeof wildstringLib,
         assert: typeof assertModule,
-        fs: typeof fsExtraLib
+        fs: typeof fsExtraLib,
+        path: typeof pathLib
 }

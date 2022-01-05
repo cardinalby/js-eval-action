@@ -4,6 +4,7 @@ import {wrapError} from "../../src/utils";
 
 export type ActionInputsObject = {
     expression?: string;
+    jsFile?: string;
     jsonInputs?: string;
     jsonEnvs?: string;
     extractOutputs?: string,

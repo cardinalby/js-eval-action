@@ -310,9 +310,9 @@ describe('js-eval-action', () => {
         expect([0, undefined]).toContain(process.exitCode);
     });
 
-    it('yaml, fs, await', async () => {
+    it('yaml, fs, path await', async () => {
         setInputsEnv({
-            expression: 'yaml.parse((await fs.readFile("action.yml")).toString()).name'
+            expression: 'yaml.parse((await fs.readFile(path.join(".", "action.yml"))).toString()).name'
         });
         await run();
         const commands = readCommands(stdout);
@@ -377,7 +377,7 @@ describe('js-eval-action', () => {
 
     it('github core access', async () => {
         setInputsEnv({
-            expression: 'core.setSecret("adr32fer43434f", "dqwdqwdqwdq")',
+            expression: 'core.setSecret("adr32fer43434f")',
         });
         await run();
         const commands = readCommands(stdout);
@@ -385,5 +385,62 @@ describe('js-eval-action', () => {
         expect(commands.outputs).toEqual({result: 'undefined', timedOut: 'false'});
         expect(commands.errors).toEqual([]);
         expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('correct jsFile', async () => {
+        setInputsEnv({
+            jsFile: 'tests/integration/evaluateJsFileCases/oneLine.js',
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({result: '4', timedOut: 'false'});
+        expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('complicated jsFile', async () => {
+        setInputsEnv({
+            jsFile: 'tests/integration/evaluateJsFileCases/complicated.js',
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect(stdout.indexOf('::add-mask::sa5464dad')).not.toEqual(-1);
+        expect(commands.outputs).toEqual({result: '22', timedOut: 'false'});
+        expect(commands.errors).toEqual([]);
+        expect([0, undefined]).toContain(process.exitCode);
+    });
+
+    it('incorrect jsFile', async () => {
+        setInputsEnv({
+            jsFile: 'tests/integration/evaluateJsFileCases/incorrect.js',
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({timedOut: 'false'});
+        expect(commands.errors).toEqual(['ReferenceError: require is not defined']);
+        expect([0, undefined]).not.toContain(process.exitCode);
+    });
+
+    it('non-existing jsFile', async () => {
+        setInputsEnv({
+            jsFile: 'tests/integration/evaluateJsFileCases/non-existing.js',
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({timedOut: 'false'});
+        expect(commands.errors.find(err => err.indexOf('non-existing.js') !== -1)).toBeTruthy();
+        expect([0, undefined]).not.toContain(process.exitCode);
+    });
+
+    it('jsFile and expression', async () => {
+        setInputsEnv({
+            jsFile: 'tests/integration/evaluateJsFileCases/oneLine.js',
+            expression: '2 * 2'
+        });
+        await run();
+        const commands = readCommands(stdout);
+        expect(commands.outputs).toEqual({timedOut: 'false'});
+        expect(commands.errors.length).toBeGreaterThan(0);
+        expect([0, undefined]).not.toContain(process.exitCode);
     });
 });
