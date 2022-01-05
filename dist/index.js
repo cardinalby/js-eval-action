@@ -399,6 +399,7 @@ const actionInputs_1 = __nccwpck_require__(8366);
 const evaluateCode_1 = __nccwpck_require__(2313);
 const keyValueJsonStorage_1 = __nccwpck_require__(6402);
 const assert = __nccwpck_require__(9491);
+const buffer_1 = __importDefault(__nccwpck_require__(4300));
 function run(logger) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -436,7 +437,9 @@ function getEvalContext(jsonInputs, jsonEnvs, logger) {
         fs,
         path,
         core: ghActions,
-        assert
+        assert,
+        buffer: buffer_1.default,
+        Buffer: buffer_1.default.Buffer
     };
 }
 function getExpressionCode(inputs) {
@@ -15369,6 +15372,14 @@ module.exports = eval("require")("encoding");
 
 "use strict";
 module.exports = require("assert");
+
+/***/ }),
+
+/***/ 4300:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("buffer");
 
 /***/ }),
 
