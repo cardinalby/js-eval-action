@@ -4,9 +4,15 @@
 
 ## Eval JS expression as a workflow step
 
-GitHub Action for evaluating JavaScript code passed as `expression` input.
-Can be handy for implementing easy logic, math and string manipulation instead 
-of using bash scripts.
+It's a GitHub Action for evaluating small pieces of JavaScript code passed as `expression` input 
+or placed to a separate file. 
+
+Can be handy for implementing easy logic, math and string manipulation instead of using bash scripts.
+
+Also, you can make own composite actions on base of _js-eval-action_ by creating a single `action.yml` file.
+If you want to extract JS code to a file and get code completion and type checks you can install
+[js-eval-action-expression-context](https://www.npmjs.com/package/js-eval-action-expression-context) package.
+Look at [example](https://github.com/cardinalby/js-eval-action/tree/master/example) dir to see this approach.
 
 ## Examples
 
@@ -50,13 +56,21 @@ of using bash scripts.
   env:
     ENV_FILE: 'constants.env'
   with:
-    expression: |
-      Object.entries(
-        dotenv.parse(fs.readFileSync(env.ENV_FILE))
-      ).forEach(
-        e => core.exportVariable(e[0], e[1])
-      )
+    jsFile: 'exportEnvs.js'
 ```
+
+_exportEnvs.js:_
+
+```js
+Object.entries(
+    dotenv.parse(fs.readFileSync(env.ENV_FILE).toString())
+).forEach(
+    e => core.exportVariable(e[0], e[1])
+)
+```
+
+Look at [example](https://github.com/cardinalby/js-eval-action/tree/master/example) dir to see the same
+code extracted as a composite action.
 
 ### Validate [dispatched_workflow](https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows#workflow_dispatch) inputs
 

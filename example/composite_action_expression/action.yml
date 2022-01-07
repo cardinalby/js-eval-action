@@ -1,0 +1,20 @@
+name: 'export-env-variables-1'
+description: "Demonstrates building composite actions on base of js-eval-action"
+
+inputs:
+  envFile:
+    description: "Env file path"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: cardinalby/js-eval-action@v1
+      env:
+        ENV_FILE: ${{ inputs.envFile }}
+      with:
+        expression: |
+          Object.entries(
+            dotenv.parse(fs.readFileSync(env.ENV_FILE))
+          ).forEach(
+            e => core.exportVariable(e[0], e[1])
+          )

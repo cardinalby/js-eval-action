@@ -1,0 +1,15 @@
+name: 'export-env-variables-2'
+description: "Demonstrates building composite actions on base of js-eval-action"
+
+inputs:
+  envFile:
+    description: "Env file path"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: cardinalby/js-eval-action@v1
+      env:
+        ENV_FILE: ${{ inputs.envFile }}
+      with:
+        jsFile: ${{ github.action_path }}index.js
