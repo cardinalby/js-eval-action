@@ -1,6 +1,6 @@
 import {evaluateCode, TimedOutError} from "../../src/evaluateCode";
 import {ActionOutputsFake} from "./ActionOutputsFake";
-import {performance} from "perf_hooks";
+import {Duration} from "../utils/Duration";
 
 describe('evaluateCode', () => {
     let outputsFake: ActionOutputsFake;
@@ -92,7 +92,7 @@ describe('evaluateCode', () => {
     });
 
     it('should fail on sync timeout', async () => {
-        const startTime = performance.now();
+        const duration = Duration.startMeasuring();
         await expect(async () =>
             await evaluateCode(
                 {},
@@ -102,16 +102,16 @@ describe('evaluateCode', () => {
                 100
             )
         ).rejects.toThrow(TimedOutError);
-        const endTime = performance.now();
-        expect(endTime-startTime).toBeLessThan(200);
-        expect(endTime-startTime).toBeGreaterThan(100);
+        const durationMs = duration.measureMs();
+        expect(durationMs).toBeLessThan(200);
+        expect(durationMs).toBeGreaterThan(100);
         expect(outputsFake.result).toBeUndefined();
         expect(outputsFake.timedOut).toEqual(true);
         expect(outputsFake.outputsObj).toBeUndefined();
     });
 
     it('should fail on async timeout', async () => {
-        const startTime = performance.now();
+        const duration = Duration.startMeasuring();
         await expect(async () => {
             await evaluateCode(
                 {},
@@ -121,9 +121,9 @@ describe('evaluateCode', () => {
                 100
             );
         }).rejects.toThrow(TimedOutError);
-        const endTime = performance.now();
-        expect(endTime-startTime).toBeLessThan(200);
-        expect(endTime-startTime).toBeGreaterThan(100);
+        const durationMs = duration.measureMs();
+        expect(durationMs).toBeLessThan(200);
+        expect(durationMs).toBeGreaterThan(100);
         expect(outputsFake.result).toBeUndefined();
         expect(outputsFake.timedOut).toEqual(true);
         expect(outputsFake.outputsObj).toBeUndefined();

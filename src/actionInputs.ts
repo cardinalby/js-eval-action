@@ -1,5 +1,6 @@
 import {InputOptions} from "@actions/core";
 import {MatchKeyRule, MatchKeyRuleInterface} from "./matchKeyRule";
+import {stringToBoolean} from "./utils";
 
 const INPUT_EXPRESSION = 'expression';
 const JS_FILE = 'jsFile';
@@ -77,14 +78,7 @@ export class ActionInputs implements ActionInputsInterface {
     }
 
     private getBooleanInput(name: string, options?: InputOptions): boolean {
-        const trueValue = ['true', 'True', 'TRUE'];
-        const falseValue = ['false', 'False', 'FALSE'];
         const val = this._readRawInput(name, options);
-        if (trueValue.includes(val))
-            return true;
-        if (falseValue.includes(val))
-            return false;
-        throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}\n` +
-            `Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
+        return stringToBoolean(val);
     }
 }
