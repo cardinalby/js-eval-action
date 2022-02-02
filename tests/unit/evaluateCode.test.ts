@@ -1,6 +1,7 @@
 import {evaluateCode, TimedOutError} from "../../src/evaluateCode";
 import {ActionOutputsFake} from "./ActionOutputsFake";
 import {Duration} from "../utils/Duration";
+import inspector from "inspector";
 
 describe('evaluateCode', () => {
     let outputsFake: ActionOutputsFake;
@@ -102,9 +103,11 @@ describe('evaluateCode', () => {
                 100
             )
         ).rejects.toThrow(TimedOutError);
-        const durationMs = duration.measureMs();
-        expect(durationMs).toBeLessThan(200);
-        expect(durationMs).toBeGreaterThan(100);
+        if (!inspector.url()) {
+            const durationMs = duration.measureMs();
+            expect(durationMs).toBeLessThan(250);
+            expect(durationMs).toBeGreaterThan(90);
+        }
         expect(outputsFake.result).toBeUndefined();
         expect(outputsFake.timedOut).toEqual(true);
         expect(outputsFake.outputsObj).toBeUndefined();
@@ -121,9 +124,11 @@ describe('evaluateCode', () => {
                 100
             );
         }).rejects.toThrow(TimedOutError);
-        const durationMs = duration.measureMs();
-        expect(durationMs).toBeLessThan(200);
-        expect(durationMs).toBeGreaterThan(100);
+        if (!inspector.url()) {
+            const durationMs = duration.measureMs();
+            expect(durationMs).toBeLessThan(250);
+            expect(durationMs).toBeGreaterThan(90);
+        }
         expect(outputsFake.result).toBeUndefined();
         expect(outputsFake.timedOut).toEqual(true);
         expect(outputsFake.outputsObj).toBeUndefined();
