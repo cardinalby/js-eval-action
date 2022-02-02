@@ -45,7 +45,7 @@ function getEvalContext(
     jsonInputs: MatchKeyRuleInterface,
     jsonEnvs: MatchKeyRuleInterface,
     logger: LoggerFunction|undefined
-): object {
+): {[k: string]: any} {
     const inputsProxy = createProxyObject(
         logger, ghActions.getInput, jsonInputs, false, 'input');
     const envProxy = createProxyObject(
@@ -91,12 +91,19 @@ async function runImpl(logger?: LoggerFunction|undefined) {
     const actionInputs = new ActionInputs(ghActions.getInput);
     const actionOutputs = new ActionOutputs(ghActions.setOutput, formatOutput, logger);
     const evalContext = getEvalContext(actionInputs.jsonInputs, actionInputs.jsonEnvs, logger);
+
     let expressionCode: string;
     try {
         expressionCode = await getExpressionCode(actionInputs);
     } catch (error) {
         actionOutputs.setTimedOut(false);
         throw error;
+    }
+
+    if (actionInputs.expression?.includes('octokit.') &&
+        evalContext.octokit === undefined
+    ) {
+        ghActions.warning('It seems you access "octokit" in the code, but env.GITHUB_TOKEN is not set');
     }
 
     await evaluateCode(
