@@ -451,6 +451,7 @@ function getExpressionCode(inputs) {
     });
 }
 function runImpl(logger) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const actionInputs = new actionInputs_1.ActionInputs(ghActions.getInput);
         const actionOutputs = new actionOutputs_1.ActionOutputs(ghActions.setOutput, actionOutputs_1.formatOutput, logger);
@@ -462,6 +463,10 @@ function runImpl(logger) {
         catch (error) {
             actionOutputs.setTimedOut(false);
             throw error;
+        }
+        if (((_a = actionInputs.expression) === null || _a === void 0 ? void 0 : _a.includes('octokit.')) &&
+            evalContext.octokit === undefined) {
+            ghActions.warning('It seems you access "octokit" in the code, but env.GITHUB_TOKEN is not set');
         }
         yield (0, evaluateCode_1.evaluateCode)(evalContext, expressionCode, actionOutputs, actionInputs.extractOutputs, actionInputs.timeoutMs, actionInputs.jsFile);
     });
