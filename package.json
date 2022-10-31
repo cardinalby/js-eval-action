@@ -11,12 +11,13 @@
     "pack": "ncc build",
     "buildExpressionContextTypesPkg": "node expressionContextTypes/preparePackageJson.js",
     "test": "jest",
-    "all": "npm run build && npm run pack"
+    "all": "npm run build && npm run pack",
+    "mergeToV1AndPush": "git fetch . master:v1 && git push origin v1"
   },
   "author": "cardinalby",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.6.0",
+    "@actions/core": "^1.10.0",
     "@actions/github": "^5.0.0",
     "semver": "^7.3.5",
     "yaml": "^1.10.2",
@@ -36,6 +37,6 @@
     "jest": "^27.4.5",
     "ts-jest": "^27.1.1",
     "intercept-stdout": "^0.1.2",
-    "github-action-ts-run-api": "^2.0.0"
+    "github-action-ts-run-api": "^2.3.0"
   }
 }
