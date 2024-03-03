@@ -281,7 +281,7 @@ Contains [fs-extra](https://www.npmjs.com/package/fs-extra) library.
 
 ### `path`
 
-Contains NodeJS [path](https://nodejs.org/docs/latest-v16.x/api/path.html) module.
+Contains NodeJS [path](https://nodejs.org/docs/latest-v20.x/api/path.html) module.
 
 ### `assert`
 

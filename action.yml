@@ -30,7 +30,7 @@ outputs:
   timedOut:
     description: '"true" if expression evaluation failed due to timeout. "false" otherwise'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
 branding:
   icon: 'code'

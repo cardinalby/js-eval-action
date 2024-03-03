@@ -21,7 +21,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '21', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('validating data', async () => {
@@ -37,7 +37,7 @@ describe('js-eval-action', () => {
             }));
         expect(res.isSuccess).toEqual(false);
         expect(res.commands.outputs).toEqual({timedOut: 'false'});
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('validate and return data', async () => {
@@ -54,7 +54,7 @@ describe('js-eval-action', () => {
             }));
         expect(res.isSuccess).toEqual(true);
         expect(res.commands.outputs).toEqual({result: '2', timedOut: 'false'});
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('extract outputs', async () => {
@@ -68,7 +68,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({o1: '2', o2: JSON.stringify({nested: 'bba'}), timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('extract outputs failure', async () => {
@@ -80,7 +80,7 @@ describe('js-eval-action', () => {
         expect(res.isSuccess).toEqual(false);
         expect(res.commands.errors.length).toEqual(1);
         expect(res.commands.outputs).toEqual({ timedOut: 'false' });
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('json inputs', async () => {
@@ -96,7 +96,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '18100', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('jsonInputs asterisk', async () => {
@@ -111,7 +111,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '118', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('json inputs failure', async () => {
@@ -125,7 +125,7 @@ describe('js-eval-action', () => {
         expect(res.commands.errors.length).toBeGreaterThan(0);
         expect(res.commands.outputs).toEqual({ timedOut: 'false' });
         expect(res.isSuccess).toEqual(false);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('expression failure', async () => {
@@ -136,7 +136,7 @@ describe('js-eval-action', () => {
         expect(res.commands.errors.length).toEqual(1);
         expect(res.commands.outputs).toEqual({ timedOut: 'false'});
         expect(res.isSuccess).toEqual(false);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('resolved promise expression', async () => {
@@ -148,7 +148,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '22', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('rejected promise expression', async () => {
@@ -163,7 +163,7 @@ describe('js-eval-action', () => {
             expect(res.durationMs).toBeGreaterThanOrEqual(50);
         }
         expect(res.isSuccess).toEqual(false);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('env variables', async () => {
@@ -176,7 +176,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '45353', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('export env variables', async () => {
@@ -188,7 +188,7 @@ describe('js-eval-action', () => {
         expect(res.commands.addedPaths).toEqual(['my_path2']);
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('json envs', async () => {
@@ -207,7 +207,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '18100', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('json envs are case sensitive', async () => {
@@ -224,7 +224,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '4200', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('jsonEnvs asterisk', async () => {
@@ -241,7 +241,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '118', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('json envs failure', async () => {
@@ -255,7 +255,7 @@ describe('js-eval-action', () => {
         expect(res.commands.errors.length).toBeGreaterThan(0);
         expect(res.commands.outputs).toEqual({timedOut: 'false'});
         expect(res.isSuccess).toEqual(false);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('octokit request', async () => {
@@ -276,7 +276,7 @@ describe('js-eval-action', () => {
             });
             expect(res.commands.errors).toEqual([]);
             expect(res.isSuccess).toEqual(true);
-            expect(res.warnings).toHaveLength(0);
+            expect(res.runnerWarnings).toHaveLength(0);
         }
     });
 
@@ -291,7 +291,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '-1', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('semver assertion', async () => {
@@ -310,7 +310,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({greater: 'true', compatible: 'true', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('yaml, fs, path await', async () => {
@@ -321,7 +321,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: 'js-eval-action', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('dotenv test', async () => {
@@ -337,7 +337,7 @@ describe('js-eval-action', () => {
         });
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('buffer', async () => {
@@ -351,7 +351,7 @@ describe('js-eval-action', () => {
         });
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it("respect timeoutMs", async () => {
@@ -366,7 +366,7 @@ describe('js-eval-action', () => {
             expect(res.durationMs).toBeGreaterThanOrEqual(50);
         }
         expect(res.isSuccess).toEqual(false);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it("timeout doesn't prevent to exit early", async () => {
@@ -380,7 +380,7 @@ describe('js-eval-action', () => {
             expect(res.durationMs).toBeLessThan(1000);
         }
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('github core access', async () => {
@@ -392,7 +392,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: 'undefined', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('correct jsFile', async () => {
@@ -403,7 +403,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '4', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('complicated jsFile', async () => {
@@ -415,7 +415,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({result: '22', timedOut: 'false'});
         expect(res.commands.errors).toEqual([]);
         expect(res.isSuccess).toEqual(true);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('incorrect jsFile', async () => {
@@ -426,7 +426,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({timedOut: 'false'});
         expect(res.commands.errors).toEqual(['ReferenceError: require is not defined']);
         expect(res.isSuccess).toEqual(false);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('non-existing jsFile', async () => {
@@ -437,7 +437,7 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({timedOut: 'false'});
         expect(res.commands.errors.find(err => err.indexOf('non-existing.js') !== -1)).toBeTruthy();
         expect(res.isSuccess).toEqual(false);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 
     it('jsFile and expression', async () => {
@@ -449,6 +449,6 @@ describe('js-eval-action', () => {
         expect(res.commands.outputs).toEqual({timedOut: 'false'});
         expect(res.commands.errors.length).toBeGreaterThan(0);
         expect(res.isSuccess).toEqual(false);
-        expect(res.warnings).toHaveLength(0);
+        expect(res.runnerWarnings).toHaveLength(0);
     });
 });
